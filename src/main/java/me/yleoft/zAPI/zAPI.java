@@ -1,7 +1,7 @@
 package me.yleoft.zAPI;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import me.yleoft.zAPI.managers.PluginYAMLManager;
+import me.yleoft.zAPI.managers.*;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -14,8 +14,9 @@ public class zAPI {
 
     private final JavaPlugin plugin;
     protected final PluginYAMLManager pym;
-    protected final String pluginName;
-    protected final String coloredPluginName;
+    protected final FileManager fm;
+    protected String pluginName;
+    protected String coloredPluginName;
     protected PlaceholderExpansion papi;
     protected Economy economy;
 
@@ -24,6 +25,7 @@ public class zAPI {
         this.pluginName = pluginName;
         this.coloredPluginName = coloredPluginName;
         pym = new PluginYAMLManager();
+        fm = new FileManager();
         plugin.getLogger().info("[zAPI] Initialized with " + plugin.getName());
     }
 
@@ -33,9 +35,9 @@ public class zAPI {
      * @param pluginName Custom name of the plugin
      * @param coloredPluginName Custom colored name of the plugin
      */
-    public static void init(JavaPlugin plugin, String pluginName, String coloredPluginName) {
+    public static void init(@NotNull JavaPlugin plugin, @Nullable String pluginName, @NotNull String coloredPluginName) {
         if (zAPI == null) {
-            zAPI = new zAPI(plugin, pluginName, coloredPluginName);
+            zAPI = new zAPI(plugin, pluginName == null ? plugin.getName() : pluginName, coloredPluginName);
         }
     }
 
@@ -70,6 +72,9 @@ public class zAPI {
     public String getPluginName() {
         return pluginName;
     }
+    public void setPluginName(@NotNull String pluginName) {
+        this.pluginName = pluginName;
+    }
 
     /**
      * Returns the custom colored name of the plugin that initialized zAPI
@@ -79,6 +84,29 @@ public class zAPI {
     @NotNull
     public String getColoredPluginName() {
         return coloredPluginName;
+    }
+    public void setColoredPluginName(@NotNull String coloredPluginName) {
+        this.coloredPluginName = coloredPluginName;
+    }
+
+    /**
+     * Returns the {@link PluginYAMLManager}
+     *
+     * @return {@link PluginYAMLManager}
+     */
+    @NotNull
+    public PluginYAMLManager getPluginYAMLManager() {
+        return pym;
+    }
+
+    /**
+     * Returns the {@link FileManager}
+     *
+     * @return {@link FileManager}
+     */
+    @NotNull
+    public FileManager getFileManager() {
+        return fm;
     }
 
     /**
