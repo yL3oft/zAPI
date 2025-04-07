@@ -13,7 +13,7 @@ public class zAPI {
     private static zAPI zAPI;
 
     private final JavaPlugin plugin;
-    protected final PluginYAMLManager pym = new PluginYAMLManager();
+    protected final PluginYAMLManager pym;
     protected final String pluginName;
     protected final String coloredPluginName;
     protected PlaceholderExpansion papi;
@@ -23,6 +23,7 @@ public class zAPI {
         this.plugin = plugin;
         this.pluginName = pluginName;
         this.coloredPluginName = coloredPluginName;
+        pym = new PluginYAMLManager();
         plugin.getLogger().info("[zAPI] Initialized with " + plugin.getName());
     }
 

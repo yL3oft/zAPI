@@ -25,7 +25,7 @@ public class PluginYAMLManager {
     private zAPI main = zAPI.getInstance();
 
     public PluginYAMLManager() {
-        this.file = main.getDescription();
+        this.file = main.getPlugin().getDescription();
     }
 
     public static final TabExecutor emptyExec = new TabExecutor() {
@@ -113,14 +113,14 @@ public class PluginYAMLManager {
                 commandMap.register(main.getPluginName(), cmd);
                 cmds.add(cmd);
 
-                main.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
+                main.getPlugin().getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
                         main.getColoredPluginName()+"&aLoaded command &e/"+command
                 ));
             }catch (Exception e) {
-                main.getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
+                main.getPlugin().getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
             }
         }else {
-            main.getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
+            main.getPlugin().getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
         }
     }
 
@@ -148,14 +148,14 @@ public class PluginYAMLManager {
                 commandMap.register(main.getPluginName(), cmd);
                 cmds.add(cmd);
 
-                main.getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
+                main.getPlugin().getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
                         main.getColoredPluginName()+"&aLoaded command &e/"+command
                 ));
             }catch (Exception e) {
-                main.getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
+                main.getPlugin().getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
             }
         }else {
-            main.getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
+            main.getPlugin().getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
         }
     }
 
@@ -199,13 +199,13 @@ public class PluginYAMLManager {
 
     public void registerTabCompleter(String command, TabCompleter tc){
         try {
-            Objects.requireNonNull(main.getCommand(command)).setTabCompleter(tc);
+            Objects.requireNonNull(main.getPlugin().getCommand(command)).setTabCompleter(tc);
         }catch (Exception e) {
         }
     }
 
     public void registerEvent(Listener l) {
-        main.getServer().getPluginManager().registerEvents(l, main);
+        main.getPlugin().getServer().getPluginManager().registerEvents(l, main.getPlugin());
     }
 
 }
