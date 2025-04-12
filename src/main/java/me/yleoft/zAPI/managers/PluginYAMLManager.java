@@ -22,9 +22,10 @@ public class PluginYAMLManager {
     private PluginDescriptionFile file;
     private List<Command> cmds = new ArrayList<>();
     private List<String> perms = new ArrayList<>();
-    private zAPI main = zAPI.getInstance();
+    private zAPI main;
 
-    public PluginYAMLManager() {
+    public PluginYAMLManager(zAPI zAPI) {
+        this.main = zAPI;
         this.file = main.getPlugin().getDescription();
     }
 
@@ -39,11 +40,11 @@ public class PluginYAMLManager {
         }
     };
 
-    public static void syncCommands() {
+    public void syncCommands() {
         try {
-            Method syncCommandsMethod = Bukkit.getServer().getClass().getDeclaredMethod("syncCommands");
+            Method syncCommandsMethod = main.getPlugin().getServer().getClass().getDeclaredMethod("syncCommands");
             syncCommandsMethod.setAccessible(true);
-            syncCommandsMethod.invoke(Bukkit.getServer());
+            syncCommandsMethod.invoke(main.getPlugin().getServer());
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Could not invoke syncCommands method", e);
         }
@@ -98,7 +99,7 @@ public class PluginYAMLManager {
                 c.setAccessible(true);
                 f.setAccessible(true);
 
-                PluginCommand cmd = c.newInstance(command, main);
+                PluginCommand cmd = c.newInstance(command, main.getPlugin());
                 cmd.setDescription(description);
                 cmd.setExecutor(ce);
 
@@ -117,6 +118,7 @@ public class PluginYAMLManager {
                         main.getColoredPluginName()+"&aLoaded command &e/"+command
                 ));
             }catch (Exception e) {
+                e.printStackTrace();
                 main.getPlugin().getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
             }
         }else {
@@ -132,7 +134,7 @@ public class PluginYAMLManager {
                 c.setAccessible(true);
                 f.setAccessible(true);
 
-                PluginCommand cmd = c.newInstance(command, main);
+                PluginCommand cmd = c.newInstance(command, main.getPlugin());
                 cmd.setDescription(description);
                 cmd.setExecutor(ce);
                 cmd.setTabCompleter(completer);
@@ -152,6 +154,7 @@ public class PluginYAMLManager {
                         main.getColoredPluginName()+"&aLoaded command &e/"+command
                 ));
             }catch (Exception e) {
+                e.printStackTrace();
                 main.getPlugin().getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
             }
         }else {

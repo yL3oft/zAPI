@@ -20,37 +20,14 @@ public class zAPI {
     protected PlaceholderExpansion papi;
     protected Economy economy;
 
-    private zAPI(JavaPlugin plugin, String pluginName, String coloredPluginName) {
+    public zAPI(JavaPlugin plugin, String pluginName, String coloredPluginName) {
         this.plugin = plugin;
         this.pluginName = pluginName;
         this.coloredPluginName = coloredPluginName;
-        pym = new PluginYAMLManager();
-        fm = new FileManager();
-        plugin.getLogger().info("[zAPI] Initialized with " + plugin.getName());
-    }
-
-    /**
-     * Initializes the zAPI class
-     * @param plugin The class of the plugin
-     * @param pluginName Custom name of the plugin
-     * @param coloredPluginName Custom colored name of the plugin
-     */
-    public static void init(@NotNull JavaPlugin plugin, @Nullable String pluginName, @NotNull String coloredPluginName) {
-        if (zAPI == null) {
-            zAPI = new zAPI(plugin, pluginName == null ? plugin.getName() : pluginName, coloredPluginName);
-        }
-    }
-
-    /**
-     * Returns the zAPI class so other methods are accessible
-     *
-     * @return This class
-     */
-    public static zAPI getInstance() {
-        if (zAPI == null) {
-            throw new IllegalStateException("zAPI has not been initialized. This in an developer error!");
-        }
-        return zAPI;
+        zAPI = zAPI.this;
+        pym = new PluginYAMLManager(zAPI);
+        fm = new FileManager(zAPI);
+        plugin.getLogger().info("[zAPI] Initialized by " + plugin.getName());
     }
 
     /**

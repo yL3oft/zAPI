@@ -10,11 +10,14 @@ import java.util.logging.Level;
 
 public class FileUtils {
 
+    private zAPI zAPI;
+
     private FileConfiguration newConfig = null;
     private File configFile = null;
     private String resource = null;
 
-    public FileUtils(File f, String resource) {
+    public FileUtils(zAPI zAPI, File f, String resource) {
+        this.zAPI = zAPI;
         this.configFile = f;
         this.resource = resource;
     }
@@ -37,7 +40,7 @@ public class FileUtils {
     public void reloadConfig() {
         newConfig = YamlConfiguration.loadConfiguration(configFile);
 
-        final InputStream defConfigStream = zAPI.getInstance().getPlugin().getResource(resource);
+        final InputStream defConfigStream = zAPI.getPlugin().getResource(resource);
         if (defConfigStream == null) {
             return;
         }
@@ -53,7 +56,7 @@ public class FileUtils {
         try {
             getConfig().save(configFile);
         } catch (IOException ex) {
-            zAPI.getInstance().getPlugin().getLogger().log(Level.SEVERE, "Could not save config to " + configFile, ex);
+            zAPI.getPlugin().getLogger().log(Level.SEVERE, "Could not save config to " + configFile, ex);
         }
     }
 
@@ -69,14 +72,14 @@ public class FileUtils {
         }
 
         resourcePath = resourcePath.replace('\\', '/');
-        InputStream in = zAPI.getInstance().getPlugin().getResource(resourcePath);
+        InputStream in = zAPI.getPlugin().getResource(resourcePath);
         if (in == null) {
-            throw new IllegalArgumentException("The embedded resource '" + resourcePath + "' cannot be found in " + zAPI.getInstance().getPluginName());
+            throw new IllegalArgumentException("The embedded resource '" + resourcePath + "' cannot be found in " + zAPI.getPluginName());
         }
 
-        File outFile = new File(zAPI.getInstance().getPlugin().getDataFolder(), resourcePath);
+        File outFile = new File(zAPI.getPlugin().getDataFolder(), resourcePath);
         int lastIndex = resourcePath.lastIndexOf('/');
-        File outDir = new File(zAPI.getInstance().getPlugin().getDataFolder(), resourcePath.substring(0, lastIndex >= 0 ? lastIndex : 0));
+        File outDir = new File(zAPI.getPlugin().getDataFolder(), resourcePath.substring(0, lastIndex >= 0 ? lastIndex : 0));
 
         if (!outDir.exists()) {
             outDir.mkdirs();
@@ -93,14 +96,14 @@ public class FileUtils {
                 out.close();
                 in.close();
 
-                zAPI.getInstance().getPlugin().getServer().getConsoleSender().sendMessage(
-                        zAPI.getInstance().getColoredPluginName()+"§eFile §e'"+resourcePath+"' §fhave been created!"
+                zAPI.getPlugin().getServer().getConsoleSender().sendMessage(
+                        zAPI.getColoredPluginName()+"§eFile §e'"+resourcePath+"' §fhave been created!"
                 );
             } else {
-                zAPI.getInstance().getPlugin().getLogger().log(Level.WARNING, "Could not save " + outFile.getName() + " to " + outFile + " because " + outFile.getName() + " already exists.");
+                zAPI.getPlugin().getLogger().log(Level.WARNING, "Could not save " + outFile.getName() + " to " + outFile + " because " + outFile.getName() + " already exists.");
             }
         } catch (IOException ex) {
-            zAPI.getInstance().getPlugin().getLogger().log(Level.SEVERE, "Could not save " + outFile.getName() + " to " + outFile, ex);
+            zAPI.getPlugin().getLogger().log(Level.SEVERE, "Could not save " + outFile.getName() + " to " + outFile, ex);
         }
     }
 
