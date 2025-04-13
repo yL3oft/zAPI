@@ -1,16 +1,18 @@
 package me.yleoft.zAPI;
 
-import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import me.clip.placeholderapi.expansion.*;
+import me.yleoft.zAPI.listeners.*;
 import me.yleoft.zAPI.managers.*;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class zAPI {
 
     private static zAPI zAPI;
+
+    public static String customCommandNBT = "zAPI:customCommand";
 
     private final JavaPlugin plugin;
     protected final PluginYAMLManager pym;
@@ -20,13 +22,33 @@ public class zAPI {
     protected PlaceholderExpansion papi;
     protected Economy economy;
 
-    public zAPI(JavaPlugin plugin, String pluginName, String coloredPluginName) {
+    /**
+     * Constructor for zAPI
+     *
+     * @param plugin The plugin that is using zAPI
+     * @param pluginName The custom name of the plugin
+     * @param coloredPluginName The custom colored name of the plugin
+     */
+    public zAPI(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName) {
         this.plugin = plugin;
         this.pluginName = pluginName;
         this.coloredPluginName = coloredPluginName;
         zAPI = zAPI.this;
         pym = new PluginYAMLManager(zAPI);
         fm = new FileManager(zAPI);
+        plugin.getLogger().info("[zAPI] Initialized by " + plugin.getName());
+    }
+    public zAPI(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName, boolean useNBTAPI) {
+        this.plugin = plugin;
+        this.pluginName = pluginName;
+        this.coloredPluginName = coloredPluginName;
+        zAPI = zAPI.this;
+        pym = new PluginYAMLManager(zAPI);
+        fm = new FileManager(zAPI);
+        if(useNBTAPI) {
+            pym.registerEvent(new DupeFixerListeners(this));
+            pym.registerEvent(new ItemListeners(this));
+        }
         plugin.getLogger().info("[zAPI] Initialized by " + plugin.getName());
     }
 
@@ -90,8 +112,12 @@ public class zAPI {
      * Returns the <a href="https://github.com/PlaceholderAPI/PlaceholderAPI/wiki/PlaceholderExpansion">PlaceholderAPI Expansion</a> of the plugin for you
      *
      * @return The {@link me.clip.placeholderapi.expansion.PlaceholderExpansion} class of the plugin
+     * @throws RuntimeException if the PlaceholderAPI is not enabled
      */
     public PlaceholderExpansion getPlaceholderExpansion() {
+        if(papi == null) {
+            throw new RuntimeException("PlaceholderAPI is not enabled");
+        }
         return papi;
     }
 
@@ -126,8 +152,7 @@ public class zAPI {
 
     /**
      * Setups the VaultAPI economy
-     *
-     * @throws RuntimeException
+     * @throws RuntimeException if Vault is not present on the server
      */
     private void setupEconomy() {
         if (plugin.getServer().getPluginManager().getPlugin("Vault") == null) {

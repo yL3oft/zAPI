@@ -9,6 +9,7 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -16,7 +17,10 @@ import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Map.Entry;
 
-
+/**
+ * PluginYAMLManager class to manage commands and permissions for a Bukkit plugin.
+ * It allows registering and unregistering commands and permissions dynamically.
+ */
 public class PluginYAMLManager {
 
     private PluginDescriptionFile file;
@@ -24,11 +28,19 @@ public class PluginYAMLManager {
     private List<String> perms = new ArrayList<>();
     private zAPI main;
 
-    public PluginYAMLManager(zAPI zAPI) {
+    /**
+     * Constructor to initialize the PluginYAMLManager with the zAPI instance.
+     * @param zAPI The zAPI instance.
+     */
+    public PluginYAMLManager(@NotNull zAPI zAPI) {
         this.main = zAPI;
         this.file = main.getPlugin().getDescription();
     }
 
+    /**
+     * CommandExecutor that does nothing and returns false.
+     * This is used as a placeholder for commands that are not registered.
+     */
     public static final TabExecutor emptyExec = new TabExecutor() {
         @Override
         public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -40,6 +52,10 @@ public class PluginYAMLManager {
         }
     };
 
+    /**
+     * Syncs the commands registered in the server.
+     * This method is used to ensure that all commands are properly registered.
+     */
     public void syncCommands() {
         try {
             Method syncCommandsMethod = main.getPlugin().getServer().getClass().getDeclaredMethod("syncCommands");
@@ -50,6 +66,10 @@ public class PluginYAMLManager {
         }
     }
 
+    /**
+     * Unregisters all commands registered by this plugin.
+     * This method is used to clean up commands when the plugin is disabled or reloaded.
+     */
     public void unregisterCommands() {
         try {
             Field f = Bukkit.getPluginManager().getClass().getDeclaredField("commandMap");
@@ -91,7 +111,14 @@ public class PluginYAMLManager {
         } catch (Exception exception) {}
     }
 
-    public void registerCommand(String command, CommandExecutor ce, String description, String... aliases){
+    /**
+     * Registers a command with the specified name, executor, description, and aliases.
+     * @param command The name of the command.
+     * @param ce The CommandExecutor for the command.
+     * @param description The description of the command.
+     * @param aliases The aliases for the command.
+     */
+    public void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @NotNull String description, @NotNull String... aliases){
         if(!file.getCommands().containsKey(command)) {
             try {
                 Constructor<PluginCommand> c = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
@@ -126,7 +153,15 @@ public class PluginYAMLManager {
         }
     }
 
-    public void registerCommand(String command, CommandExecutor ce, TabCompleter completer, String description, String... aliases){
+    /**
+     * Registers a command with the specified name, executor, tab completer, description, and aliases.
+     * @param command The name of the command.
+     * @param ce The CommandExecutor for the command.
+     * @param completer The TabCompleter for the command.
+     * @param description The description of the command.
+     * @param aliases The aliases for the command.
+     */
+    public void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @NotNull TabCompleter completer, @NotNull String description, @NotNull String... aliases){
         if(!file.getCommands().containsKey(command)) {
             try {
                 Constructor<PluginCommand> c = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
@@ -162,6 +197,9 @@ public class PluginYAMLManager {
         }
     }
 
+    /**
+     * Unregisters all permissions registered by this plugin.
+     */
     public void unregisterPermissions() {
         for(String perm : perms) {
             unregisterPermission(perm);
@@ -172,42 +210,52 @@ public class PluginYAMLManager {
             }
         });
     }
-    public void unregisterPermission(String permission) {
+
+    public void unregisterPermission(@NotNull String permission) {
         Bukkit.getPluginManager().removePermission(permission);
     }
-    public void unregisterPermission(Permission permission) {
+    public void unregisterPermission(@NotNull Permission permission) {
         Bukkit.getPluginManager().removePermission(permission);
     }
 
-    public void registerPermission(String permission) {
+    public void registerPermission(@NotNull String permission) {
         Bukkit.getPluginManager().addPermission(new Permission(permission));
         perms.add(permission);
     }
-    public void registerPermission(String permission, String description) {
+    public void registerPermission(@NotNull String permission, @NotNull String description) {
         Bukkit.getPluginManager().addPermission(new Permission(permission, description));
         perms.add(permission);
     }
-    public void registerPermission(String permission, PermissionDefault def) {
+    public void registerPermission(@NotNull String permission, @NotNull PermissionDefault def) {
         Bukkit.getPluginManager().addPermission(new Permission(permission, def));
         perms.add(permission);
     }
-    public void registerPermission(String permission, String description, PermissionDefault def) {
+    public void registerPermission(@NotNull String permission, @NotNull String description, @NotNull PermissionDefault def) {
         Bukkit.getPluginManager().addPermission(new Permission(permission, description, def));
         perms.add(permission);
     }
-    public void registerPermission(String permission, String description, PermissionDefault def, Map<String, Boolean> children) {
+    public void registerPermission(@NotNull String permission, @NotNull String description, @NotNull PermissionDefault def, @NotNull Map<String, Boolean> children) {
         Bukkit.getPluginManager().addPermission(new Permission(permission, description, def, children));
         perms.add(permission);
     }
 
-    public void registerTabCompleter(String command, TabCompleter tc){
+    /**
+     * Registers a TabCompleter for the specified command.
+     * @param command The name of the command.
+     * @param tc The TabCompleter for the command.
+     */
+    public void registerTabCompleter(@NotNull String command, @NotNull TabCompleter tc){
         try {
             Objects.requireNonNull(main.getPlugin().getCommand(command)).setTabCompleter(tc);
         }catch (Exception e) {
         }
     }
 
-    public void registerEvent(Listener l) {
+    /**
+     * Registers a Listener for the plugin.
+     * @param l The Listener to register.
+     */
+    public void registerEvent(@NotNull Listener l) {
         main.getPlugin().getServer().getPluginManager().registerEvents(l, main.getPlugin());
     }
 
