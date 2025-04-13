@@ -3,6 +3,7 @@ package me.yleoft.zAPI;
 import me.clip.placeholderapi.expansion.*;
 import me.yleoft.zAPI.listeners.*;
 import me.yleoft.zAPI.managers.*;
+import me.yleoft.zAPI.utils.StringUtils;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -13,6 +14,7 @@ public class zAPI {
     private static zAPI zAPI;
 
     public static String customCommandNBT = "zAPI:customCommand";
+    public static StringUtils stringUtils;
 
     private final JavaPlugin plugin;
     protected final PluginYAMLManager pym;
@@ -29,15 +31,6 @@ public class zAPI {
      * @param pluginName The custom name of the plugin
      * @param coloredPluginName The custom colored name of the plugin
      */
-    public zAPI(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName) {
-        this.plugin = plugin;
-        this.pluginName = pluginName;
-        this.coloredPluginName = coloredPluginName;
-        zAPI = zAPI.this;
-        pym = new PluginYAMLManager(zAPI);
-        fm = new FileManager(zAPI);
-        plugin.getLogger().info("[zAPI] Initialized by " + plugin.getName());
-    }
     public zAPI(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName, boolean useNBTAPI) {
         this.plugin = plugin;
         this.pluginName = pluginName;
@@ -45,11 +38,15 @@ public class zAPI {
         zAPI = zAPI.this;
         pym = new PluginYAMLManager(zAPI);
         fm = new FileManager(zAPI);
+        stringUtils = new StringUtils(this);
         if(useNBTAPI) {
             pym.registerEvent(new DupeFixerListeners(this));
             pym.registerEvent(new ItemListeners(this));
         }
         plugin.getLogger().info("[zAPI] Initialized by " + plugin.getName());
+    }
+    public zAPI(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName) {
+        this(plugin, pluginName, coloredPluginName, false);
     }
 
     /**

@@ -3,12 +3,11 @@ package me.yleoft.zAPI.managers;
 import me.yleoft.zAPI.utils.FileUtils;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.checkerframework.checker.units.qual.A;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
 /**
  * FileManager class to manage files in the plugin's data folder.
@@ -41,20 +40,26 @@ public class FileManager {
         this.fuLang2 = new FileUtils(zAPI, this.lang2, "languages/pt-br.yml");
     }
 
+    public List<FileUtils> getFiles() {
+        List<FileUtils> fus = new ArrayList<>();
+        files.forEach(cf -> fus.add(cf.getFu()));
+        return fus;
+    }
+
     /**
      * Creates a new file in the plugin's data folder.
      * @param path The path of the file to create.
      * @return The {@link YamlConfiguration} of the created file or an existing file.
      */
-    public YamlConfiguration createFile(@NotNull String path) {
+    public FileUtils createFile(@NotNull String path) {
         for (CustomFile cf : files) {
-            if (cf.getName().equals(path)) {
-                return (YamlConfiguration) cf.getFu().getConfig();
+            if (cf.getPath().equals(path)) {
+                return cf.getFu();
             }
         }
         CustomFile cf = new CustomFile(path);
         files.add(cf);
-        return (YamlConfiguration) cf.getFu().getConfig();
+        return cf.getFu();
     }
 
     /**
@@ -63,31 +68,31 @@ public class FileManager {
      * @return The {@link YamlConfiguration} of the file.
      * @throws IllegalArgumentException if the file is not found.
      */
-    public YamlConfiguration getFile(@NotNull String name) {
+    public YamlConfiguration getFile(@NotNull String path) {
         for (CustomFile cf : files) {
-            if (cf.getName().equals(name)) {
+            if (cf.getPath().equals(path)) {
                 return (YamlConfiguration) cf.getFu().getConfig();
             }
         }
-        throw new IllegalArgumentException("Unable to find file with name: " + name);
+        throw new IllegalArgumentException("Unable to find file in: " + path);
     }
 
     /**
      * Creates a custom file object.
      */
     private class CustomFile {
-        private File file;
-        private FileUtils fu;
-        private String name;
+        private final File file;
+        private final FileUtils fu;
+        private final String path;
 
         /**
          * Constructor to create a new custom file.
          * @param path The path of the file to create.
          */
         public CustomFile(@NotNull String path) {
-            this.file = new File(df, path+".yml");
-            this.fu = new FileUtils(zAPI, file, path+".yml");
-            this.name = file.getName();
+            this.file = new File(df, path);
+            this.fu = new FileUtils(zAPI, file, path);
+            this.path = path;
         }
 
         public File getFile() {
@@ -98,9 +103,10 @@ public class FileManager {
             return fu;
         }
 
-        public String getName() {
-            return name;
+        public String getPath() {
+            return path;
         }
+
     }
 
 }
