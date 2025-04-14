@@ -51,13 +51,21 @@ public class ItemListeners extends NbtUtils implements Listener {
 
         List<String> commands = getCustomCommands(item);
         for(String command : commands) {
-            if(command.startsWith("[CON]")) {
-                command = command.replace("[CON]", "");
-                zAPI.getPlugin().getServer().dispatchCommand(zAPI.getPlugin().getServer().getConsoleSender(), command);
-                continue;
-            }
-            player.performCommand(command);
+            performCommand(player, command);
         }
+    }
+
+    public void performCommand(@NotNull Player player, @NotNull String command) {
+        if(command.startsWith("[CON]")) {
+            command = command.replace("[CON]", "");
+            zAPI.getPlugin().getServer().dispatchCommand(zAPI.getPlugin().getServer().getConsoleSender(), command);
+            return;
+        }else if(command.startsWith("[INV]")) {
+            command = command.replace("[INV]", "");
+            if(command.equalsIgnoreCase("close")) player.closeInventory();
+            return;
+        }
+        player.performCommand(command);
     }
 
 }

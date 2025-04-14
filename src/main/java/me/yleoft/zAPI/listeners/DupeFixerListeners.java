@@ -1,7 +1,7 @@
 package me.yleoft.zAPI.listeners;
 
-import de.tr7zw.changeme.nbtapi.NBT;;
 import me.yleoft.zAPI.utils.InventoryUtils;
+import me.yleoft.zAPI.utils.NbtUtils;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,7 +18,7 @@ import static me.yleoft.zAPI.inventory.CustomInventory.mark;
  * DupeFixerListeners is a listener class that handles various events related to item duplication.
  * It prevents players from picking up or dropping items that are marked for duplication.
  */
-public class DupeFixerListeners extends InventoryUtils implements Listener {
+public class DupeFixerListeners implements Listener {
 
     private zAPI zAPI;
 
@@ -42,7 +42,7 @@ public class DupeFixerListeners extends InventoryUtils implements Listener {
         Player player = (Player) event.getPlayer();
 
         zAPI.getPlugin().getServer().getScheduler().runTaskLater(zAPI.getPlugin(), () -> {
-            cleanInventory(player, mark);
+            InventoryUtils.cleanInventory(player, mark);
         }, 3L);
     }
 
@@ -51,7 +51,7 @@ public class DupeFixerListeners extends InventoryUtils implements Listener {
      */
     @EventHandler
     private void onPickup(@NotNull final EntityPickupItemEvent event) {
-        if (!isMarked(event.getItem().getItemStack(), mark)) {
+        if (!NbtUtils.isMarked(event.getItem().getItemStack(), mark)) {
             return;
         }
 
@@ -63,7 +63,7 @@ public class DupeFixerListeners extends InventoryUtils implements Listener {
      */
     @EventHandler
     private void onDrop(@NotNull final PlayerDropItemEvent event) {
-        if (!isMarked(event.getItemDrop().getItemStack(), mark)) {
+        if (!NbtUtils.isMarked(event.getItemDrop().getItemStack(), mark)) {
             return;
         }
 
@@ -76,7 +76,7 @@ public class DupeFixerListeners extends InventoryUtils implements Listener {
     @EventHandler
     private void onLogin(@NotNull final PlayerLoginEvent event) {
         zAPI.getPlugin().getServer().getScheduler().runTaskLater(zAPI.getPlugin(), () -> {
-            cleanInventory(event.getPlayer(), mark);
+            InventoryUtils.cleanInventory(event.getPlayer(), mark);
         }, 10L);
     }
 

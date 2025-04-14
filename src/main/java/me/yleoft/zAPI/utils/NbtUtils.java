@@ -12,14 +12,14 @@ import static me.yleoft.zAPI.zAPI.customCommandNBT;
 /**
  * NbtUtils class to handle NBT operations on items.
  */
-public class NbtUtils {
+public abstract class NbtUtils {
 
     /**
      * Marks an item with a specific mark.
      * @param item The item to mark.
      * @param mark The mark to apply to the item.
      */
-    public void markItem(@NotNull ItemStack item, @NotNull String mark) {
+    public static void markItem(@NotNull ItemStack item, @NotNull String mark) {
         NBT.modify(item, nbt -> {
             nbt.setBoolean(mark, true);
         });
@@ -30,7 +30,7 @@ public class NbtUtils {
      * @param item The item to unmark.
      * @param mark The mark to remove from the item.
      */
-    public void unmarkItem(@NotNull ItemStack item, @NotNull String mark) {
+    public static void unmarkItem(@NotNull ItemStack item, @NotNull String mark) {
         NBT.modify(item, nbt -> {
             nbt.setBoolean(mark, false);
         });
@@ -42,7 +42,7 @@ public class NbtUtils {
      * @param mark The mark to check for.
      * @return True if the item is marked, false otherwise.
      */
-    public boolean isMarked(@NotNull ItemStack item, @NotNull String mark) {
+    public static boolean isMarked(@NotNull ItemStack item, @NotNull String mark) {
         return NBT.get(item, nbt -> {
             if(!nbt.hasTag(mark)) return false;
             return nbt.getBoolean(mark);
@@ -54,7 +54,7 @@ public class NbtUtils {
      * @param item The item to add the command to.
      * @param command The command to add.
      */
-    public void addCustomCommand(@NotNull ItemStack item, @NotNull String command, boolean isConsole) {
+    public static void addCustomCommand(@NotNull ItemStack item, @NotNull String command, boolean isConsole) {
         NBT.modify(item, nbt -> {
             String customCommand = command;
             if(isConsole) customCommand = "[CON]"+command;
@@ -65,17 +65,17 @@ public class NbtUtils {
             nbt.setString(customCommandNBT, customCommand);
         });
     }
-    public void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands, boolean isConsole) {
+    public static void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands, boolean isConsole) {
         for(String command : commands) {
             addCustomCommand(item, command, isConsole);
         }
     }
-    public void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands) {
+    public static void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands) {
         for(String command : commands) {
             addCustomCommand(item, command);
         }
     }
-    public void addCustomCommand(@NotNull ItemStack item, @NotNull String command) {
+    public static void addCustomCommand(@NotNull ItemStack item, @NotNull String command) {
         addCustomCommand(item, command, false);
     }
 
@@ -84,7 +84,7 @@ public class NbtUtils {
      * @param item The item to remove the command from.
      * @param command The command to remove.
      */
-    public void removeCustomCommand(@NotNull ItemStack item, @NotNull String command) {
+    public static void removeCustomCommand(@NotNull ItemStack item, @NotNull String command) {
         NBT.modify(item, nbt -> {
             String customCommand = nbt.getString(customCommandNBT);
             if(customCommand.equals(command)) {
@@ -103,7 +103,7 @@ public class NbtUtils {
      * @param item The item to get the commands from.
      * @return A list of custom commands.
      */
-    public List<String> getCustomCommands(@NotNull ItemStack item) {
+    public static List<String> getCustomCommands(@NotNull ItemStack item) {
         return NBT.get(item, nbt -> {
             List<String> commands = new ArrayList<>();
             if(nbt.hasTag(customCommandNBT)) {

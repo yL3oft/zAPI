@@ -1,5 +1,7 @@
 package me.yleoft.zAPI.inventory;
 
+import me.yleoft.zAPI.utils.ItemStackUtils;
+import me.yleoft.zAPI.utils.MaterialUtils;
 import me.yleoft.zAPI.utils.NbtUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -11,10 +13,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 import static me.yleoft.zAPI.zAPI.stringUtils;
 
@@ -22,7 +21,7 @@ import static me.yleoft.zAPI.zAPI.stringUtils;
  * CustomInventory class to create a custom inventory with a specified name and number of rows.
  * The inventory can hold items and can be retrieved as an Inventory object.
  */
-public class CustomInventory extends NbtUtils {
+public class CustomInventory {
 
     /**
      * The mark used to identify items in the inventory.
@@ -54,8 +53,8 @@ public class CustomInventory extends NbtUtils {
      * @param config The YamlConfiguration file to load the inventory from.
      */
     public CustomInventory(@Nullable Player player, @NotNull YamlConfiguration config) {
-        this.inventoryName = config.getString(formPath(configPathInventory, "title"));
-        this.rows =  config.getInt(formPath(configPathInventory, "rows"));
+        this.inventoryName = stringUtils.transform(player, Objects.requireNonNull(config.getString(formPath(configPathInventory, "title"))));
+        this.rows = config.getInt(formPath(configPathInventory, "rows"));
 
         for(String itemPath : config.getConfigurationSection(configPathItems).getKeys(false)) {
             String materialPath = formPath(configPathItems, itemPath, "material");
@@ -64,10 +63,14 @@ public class CustomInventory extends NbtUtils {
             String namePath = formPath(configPathItems, itemPath, "name");
             String lorePath = formPath(configPathItems, itemPath, "lore");
             String commandsPath = formPath(configPathItems, itemPath, "commands");
-            Material material = Material.getMaterial(Objects.requireNonNull(config.getString(materialPath)));
             int amount = config.contains(amountPath) ? config.getInt(amountPath) : 1;
-            assert (material != null): "Error loading material for item "+itemPath+" in "+config.getName();
-            ItemStack item = new ItemStack(material, amount);
+            ItemStack item = null;
+            if(config.isList(materialPath)) {
+                List<String> materials = config.getStringList(materialPath);
+                item = ItemStackUtils.getItem(materials.get((int) (Math.floor(Math.random() * materials.size()))), amount);
+            }else {
+                item = ItemStackUtils.getItem(Objects.requireNonNull(config.getString(materialPath)), amount);
+            }
             ItemMeta meta = item.getItemMeta();
             if (config.contains(namePath)) meta.setDisplayName(stringUtils.transform(player, Objects.requireNonNull(config.getString(namePath))));
             if (config.contains(lorePath)) {
@@ -99,8 +102,17 @@ public class CustomInventory extends NbtUtils {
                 String[] parts = slotS.split("-");
                 int start = Integer.parseInt(parts[0]);
                 int end = Integer.parseInt(parts[1]);
-                for (int i = start; i <= end; i++) {
-                    setItem(i, item, commands);
+                if(config.isList(materialPath)) {
+                    List<Material> materials = new ArrayList<>();
+                    config.getStringList(materialPath).forEach(m -> materials.add(MaterialUtils.getMaterial(m)));
+                    for (int i = start; i <= end; i++) {
+                        item.setType(materials.get((int) (Math.floor(Math.random() * materials.size()))));
+                        setItem(i, item.clone(), commands);
+                    }
+                }else {
+                    for (int i = start; i <= end; i++) {
+                        setItem(i, item, commands);
+                    }
                 }
             }
         }
@@ -141,7 +153,7 @@ public class CustomInventory extends NbtUtils {
         if (slot < 0 || slot >= rows*9) {
             throw new IllegalArgumentException("Slot must be between 0 and " + (rows*9 - 1));
         }
-        addCustomCommands(item, commands);
+        NbtUtils.addCustomCommands(item, commands);
         items.put(slot, item);
     }
     public void setItem(int slot, @NotNull ItemStack item, String command) {
@@ -182,7 +194,7 @@ public class CustomInventory extends NbtUtils {
                 itemsArray[i] = null;
                 continue;
             }
-            markItem(item, mark);
+            NbtUtils.markItem(item, mark);
             itemsArray[i] = item;
         }
         return itemsArray;

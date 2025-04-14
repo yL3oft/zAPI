@@ -205,7 +205,7 @@ public class PluginYAMLManager {
             unregisterPermission(perm);
         }
         Bukkit.getPluginManager().getPermissions().forEach(permission -> {
-            if(permission.getName().startsWith(main.getPluginName().toLowerCase())) {
+            if(permission.getName().startsWith(main.getColoredPluginName().toLowerCase())) {
                 unregisterPermission(permission);
             }
         });

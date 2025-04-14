@@ -23,6 +23,13 @@ public class StringUtils {
 
     }
 
+    public static boolean startsWithIgnoreCase(String full, String prefix) {
+        if (full == null || prefix == null) return false;
+        if (prefix.length() > full.length()) return false;
+
+        return full.substring(0, prefix.length()).equalsIgnoreCase(prefix);
+    }
+
     /**
      * Transform a string by applying color codes, hex codes and placeholders.
      * @param p The player to apply placeholders for
@@ -32,7 +39,9 @@ public class StringUtils {
     public String transform(@Nullable Player p, @NotNull String string) {
         string = hex(string);
         string = color(string);
-        string = p != null ? applyPlaceholders(p, string) : string;
+        if(p != null) {
+            string = applyPlaceholders(p, string);
+        }
         return string;
     }
 
@@ -42,9 +51,7 @@ public class StringUtils {
      * @return The transformed string
      */
     public String transform(@NotNull String string) {
-        string = hex(string);
-        string = color(string);
-        return string;
+        return transform(null, string);
     }
 
     /**
@@ -53,10 +60,20 @@ public class StringUtils {
      * @param string The string to apply placeholders to
      * @return The string with placeholders applied
      */
-    public String applyPlaceholders(@NotNull Player p, @NotNull String string) {
+    public String applyPlaceholders(@Nullable Player p, @NotNull String string) {
         if (zAPI.getPlugin().getServer().getPluginManager().isPluginEnabled("PlaceholderAPI"))
             string = PlaceholderAPI.setPlaceholders(p, string);
-        return string;
+        return applyOwnPlaceholders(p, string);
+    }
+
+    /**
+     * Apply placeholders to a string for a specific player using your own placeholder expansion.
+     * @param p The player to apply placeholders for
+     * @param string The string to apply placeholders to
+     * @return The string with placeholders applied
+     */
+    public String applyOwnPlaceholders(@Nullable Player p, @NotNull String string) {
+       return zAPI.getPlaceholderAPIHandler().applyPlaceholders(p, string);
     }
 
     /**

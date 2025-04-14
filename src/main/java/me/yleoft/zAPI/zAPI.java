@@ -1,10 +1,12 @@
 package me.yleoft.zAPI;
 
-import me.clip.placeholderapi.expansion.*;
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import me.yleoft.zAPI.handlers.PlaceholderAPIHandler;
 import me.yleoft.zAPI.listeners.*;
 import me.yleoft.zAPI.managers.*;
 import me.yleoft.zAPI.utils.StringUtils;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -15,14 +17,15 @@ public class zAPI {
 
     public static String customCommandNBT = "zAPI:customCommand";
     public static StringUtils stringUtils;
+    public PlaceholderAPIHandler placeholderAPIHandler;
 
     private final JavaPlugin plugin;
     protected final PluginYAMLManager pym;
     protected final FileManager fm;
     protected String pluginName;
     protected String coloredPluginName;
-    protected PlaceholderExpansion papi;
-    protected Economy economy;
+    protected Object papi;
+    protected Object economy;
 
     /**
      * Constructor for zAPI
@@ -39,6 +42,7 @@ public class zAPI {
         pym = new PluginYAMLManager(zAPI);
         fm = new FileManager(zAPI);
         stringUtils = new StringUtils(this);
+        placeholderAPIHandler = new PlaceholderAPIHandler(this);
         if(useNBTAPI) {
             pym.registerEvent(new DupeFixerListeners(this));
             pym.registerEvent(new ItemListeners(this));
@@ -115,7 +119,7 @@ public class zAPI {
         if(papi == null) {
             throw new RuntimeException("PlaceholderAPI is not enabled");
         }
-        return papi;
+        return (PlaceholderExpansion) papi;
     }
 
     /**
@@ -128,13 +132,60 @@ public class zAPI {
     }
 
     /**
+     * Set the {@link PlaceholderAPIHandler} for the plugin
+     * @param handler The {@link PlaceholderAPIHandler} class of the plugin
+     */
+    public void setPlaceholderAPIHandler(@NotNull PlaceholderAPIHandler handler) {
+        placeholderAPIHandler = handler;
+    }
+
+    /**
+     * Returns the {@link PlaceholderAPIHandler} for the plugin
+     *
+     * @return The {@link PlaceholderAPIHandler} class of the plugin
+     */
+    public PlaceholderAPIHandler getPlaceholderAPIHandler() {
+        return placeholderAPIHandler;
+    }
+
+    /**
      * Register the <a href="https://github.com/PlaceholderAPI/PlaceholderAPI/wiki/PlaceholderExpansion">PlaceholderAPI Expansion</a> for you
      * @param expansion The {@link me.clip.placeholderapi.expansion.PlaceholderExpansion} class of the plugin
      */
-    public void registerPlaceholderExpansion(@NotNull PlaceholderExpansion expansion){
+    public void registerPlaceholderExpansion(@NotNull String author, @NotNull String version, boolean canRegister, boolean persist) {
         if (plugin.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            papi = expansion;
-            papi.register();
+            papi = new PlaceholderExpansion() {
+                @Override
+                public @NotNull String getIdentifier() {
+                    return plugin.getDescription().getName().toLowerCase();
+                }
+
+                @Override
+                public @NotNull String getAuthor() {
+                    return author;
+                }
+
+                @Override
+                public @NotNull String getVersion() {
+                    return version;
+                }
+
+                @Override
+                public boolean canRegister() {
+                    return canRegister;
+                }
+
+                @Override
+                public boolean persist() {
+                    return persist;
+                }
+
+                @Override
+                public String onPlaceholderRequest(Player p, @NotNull String params) {
+                    return placeholderAPIHandler.applyHookPlaceholders(p, params);
+                }
+            };
+            ((PlaceholderExpansion)papi).register();
         }
     }
 
@@ -143,7 +194,7 @@ public class zAPI {
      */
     public void unregisterPlaceholderExpansion() {
         if(papi != null) {
-            papi.unregister();
+            ((PlaceholderExpansion)papi).unregister();
         }
     }
 

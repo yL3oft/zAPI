@@ -64,7 +64,7 @@ public class FileUtils {
     /**
      * Reloads the configuration file.
      */
-    public void reloadConfig() {
+    public void reloadConfig(boolean copyDefaults) {
         newConfig = YamlConfiguration.loadConfiguration(configFile);
 
         final InputStream defConfigStream = zAPI.getPlugin().getResource(resource);
@@ -75,8 +75,11 @@ public class FileUtils {
         newConfig.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(defConfigStream, Charsets.UTF_8)));
 
         saveDefaultConfig();
-        getConfig().options().copyDefaults(true);
+        getConfig().options().copyDefaults(copyDefaults);
         saveConfig();
+    }
+    public void reloadConfig() {
+        reloadConfig(true);
     }
 
     /**
@@ -114,7 +117,7 @@ public class FileUtils {
         resourcePath = resourcePath.replace('\\', '/');
         InputStream in = zAPI.getPlugin().getResource(resourcePath);
         if (in == null) {
-            throw new IllegalArgumentException("The embedded resource '" + resourcePath + "' cannot be found in " + zAPI.getPluginName());
+            throw new IllegalArgumentException("The embedded resource '" + resourcePath + "' cannot be found in " + zAPI.getColoredPluginName());
         }
 
         File outFile = new File(zAPI.getPlugin().getDataFolder(), resourcePath);
