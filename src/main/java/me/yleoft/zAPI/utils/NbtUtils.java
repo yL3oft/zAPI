@@ -3,8 +3,10 @@ package me.yleoft.zAPI.utils;
 import de.tr7zw.changeme.nbtapi.NBT;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static me.yleoft.zAPI.zAPI.customCommandNBT;
@@ -54,20 +56,30 @@ public abstract class NbtUtils {
      * @param item The item to add the command to.
      * @param command The command to add.
      */
-    public static void addCustomCommand(@NotNull ItemStack item, @NotNull String command, boolean isConsole) {
+    public static void addCustomCommand(@NotNull ItemStack item, @NotNull String command, @Nullable HashMap<String, String> replaces, boolean isConsole) {
         NBT.modify(item, nbt -> {
             String customCommand = command;
-            if(isConsole) customCommand = "[CON]"+command;
+            if(replaces != null) {
+                for(String key : replaces.keySet()) {
+                    customCommand = customCommand.replace(key, replaces.get(key));
+                }
+            }
+            if(isConsole) customCommand = "[CON]"+ customCommand;
             if(nbt.hasTag(customCommandNBT)) {
-                if(nbt.getString(customCommandNBT).contains(command)) return;
-                customCommand = nbt.getString(customCommandNBT)+"||"+command;
+                if(nbt.getString(customCommandNBT).contains(customCommand)) return;
+                customCommand = nbt.getString(customCommandNBT)+"||"+customCommand;
             }
             nbt.setString(customCommandNBT, customCommand);
         });
     }
+    public static void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands, @Nullable HashMap<String, String> replaces, boolean isConsole) {
+        for(String command : commands) {
+            addCustomCommand(item, command, replaces, isConsole);
+        }
+    }
     public static void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands, boolean isConsole) {
         for(String command : commands) {
-            addCustomCommand(item, command, isConsole);
+            addCustomCommand(item, command, null, isConsole);
         }
     }
     public static void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands) {
@@ -75,8 +87,15 @@ public abstract class NbtUtils {
             addCustomCommand(item, command);
         }
     }
-    public static void addCustomCommand(@NotNull ItemStack item, @NotNull String command) {
-        addCustomCommand(item, command, false);
+    public static void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands, @Nullable HashMap<String, String> replaces) {
+        for(String command : commands) {
+            addCustomCommand(item, command, replaces);
+        }
+    }
+    public static void addCustomCommand(@NotNull ItemStack item, @NotNull String command, @Nullable HashMap<String, String> replaces) {
+        addCustomCommand(item, command, replaces, false);
+    }public static void addCustomCommand(@NotNull ItemStack item, @NotNull String command) {
+        addCustomCommand(item, command, null);
     }
 
     /**

@@ -9,12 +9,17 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+import static java.lang.Math.floor;
+import static java.lang.Math.random;
+import static java.util.Objects.requireNonNull;
+import static me.yleoft.zAPI.utils.ConfigUtils.formPath;
+import static me.yleoft.zAPI.utils.ItemStackUtils.*;
+import static me.yleoft.zAPI.utils.NbtUtils.addCustomCommands;
 import static me.yleoft.zAPI.zAPI.stringUtils;
 
 /**
@@ -53,94 +58,20 @@ public class CustomInventory {
      * @param config The YamlConfiguration file to load the inventory from.
      */
     public CustomInventory(@Nullable Player player, @NotNull YamlConfiguration config) {
-        this.inventoryName = stringUtils.transform(player, Objects.requireNonNull(config.getString(formPath(configPathInventory, "title"))));
+        this.inventoryName = stringUtils.transform(player, requireNonNull(config.getString(formPath(configPathInventory, "title"))));
         this.rows = config.getInt(formPath(configPathInventory, "rows"));
 
         for(String itemPath : config.getConfigurationSection(configPathItems).getKeys(false)) {
             String materialPath = formPath(configPathItems, itemPath, "material");
-            String amountPath = formPath(configPathItems, itemPath, "amount");
             String slotPath = formPath(configPathItems, itemPath, "slot");
-            String namePath = formPath(configPathItems, itemPath, "name");
-            String lorePath = formPath(configPathItems, itemPath, "lore");
-            String commandsPath = formPath(configPathItems, itemPath, "commands");
-            int amount = config.contains(amountPath) ? config.getInt(amountPath) : 1;
-            ItemStack item = null;
-            if(config.isList(materialPath)) {
-                List<String> materials = config.getStringList(materialPath);
-                item = ItemStackUtils.getItem(materials.get((int) (Math.floor(Math.random() * materials.size()))), amount);
-            }else {
-                item = ItemStackUtils.getItem(Objects.requireNonNull(config.getString(materialPath)), amount);
-            }
-            ItemMeta meta = item.getItemMeta();
-            if (config.contains(namePath)) meta.setDisplayName(stringUtils.transform(player, Objects.requireNonNull(config.getString(namePath))));
-            if (config.contains(lorePath)) {
-                List<String> lore;
-                if (config.isList(lorePath)) {
-                    lore = config.getStringList(lorePath);
-                    List<String> transformedLore = new ArrayList<>();
-                    lore.forEach(loreLine -> transformedLore.add(stringUtils.transform(player, loreLine)));
-                    lore = transformedLore;
-                } else {
-                    lore = List.of(stringUtils.transform(player, Objects.requireNonNull(config.getString(lorePath))));
-                }
-                meta.setLore(lore);
-            }
-            item.setItemMeta(meta);
-            List<String> commands = new ArrayList<>();
-            if (config.contains(commandsPath)) {
-                if (config.isList(commandsPath)) {
-                    commands = config.getStringList(commandsPath);
-                } else {
-                    commands = List.of(Objects.requireNonNull(config.getString(commandsPath)));
-                }
-            }
+            ItemStack item = getItemFromConfig(player, config, formPath(configPathItems, itemPath));
             String slotS = config.getString(slotPath);
             assert slotS != null;
-            if (slotS.matches("\\d+")) {
-                setItem(Integer.parseInt(slotS), item, commands);
-            } else if (slotS.matches("\\d+-\\d+")) {
-                String[] parts = slotS.split("-");
-                int start = Integer.parseInt(parts[0]);
-                int end = Integer.parseInt(parts[1]);
-                if(config.isList(materialPath)) {
-                    List<Material> materials = new ArrayList<>();
-                    config.getStringList(materialPath).forEach(m -> materials.add(MaterialUtils.getMaterial(m)));
-                    for (int i = start; i <= end; i++) {
-                        item.setType(materials.get((int) (Math.floor(Math.random() * materials.size()))));
-                        setItem(i, item.clone(), commands);
-                    }
-                }else {
-                    for (int i = start; i <= end; i++) {
-                        setItem(i, item, commands);
-                    }
-                }
-            }
+            setItem(config, materialPath, slotS, item, null);
         }
     }
     public CustomInventory(@NotNull YamlConfiguration config) {
         this(null, config);
-    }
-
-    /**
-     * Forms a yaml path from the given strings.
-     * @param strs The strings to form the path from.
-     * @return The formed path.
-     */
-    public static String formPath(String... strs) {
-        StringBuilder path = new StringBuilder();
-
-        try {
-            for(String str : strs) {
-                if(path.isEmpty()) {
-                    path = new StringBuilder(str);
-                    continue;
-                }
-                path.append(".").append(str);
-            }
-        }catch (Exception ignored) {
-        }
-
-        return path.toString();
     }
 
     /**
@@ -149,18 +80,111 @@ public class CustomInventory {
      * @param item The item to add.
      * @throws IllegalArgumentException if the slot is out of bounds.
      */
-    public void setItem(int slot, @NotNull ItemStack item, @NotNull List<String> commands) {
+    public void setItem(int slot, @NotNull ItemStack item, @NotNull List<String> commands, @Nullable HashMap<String, String> replaces) {
         if (slot < 0 || slot >= rows*9) {
             throw new IllegalArgumentException("Slot must be between 0 and " + (rows*9 - 1));
         }
-        NbtUtils.addCustomCommands(item, commands);
+        if (replaces != null && !replaces.isEmpty()) {
+            addCustomCommands(item, commands, replaces);
+            replaceAll(item, replaces);
+        }else {
+            addCustomCommands(item, commands);
+        }
         items.put(slot, item);
     }
-    public void setItem(int slot, @NotNull ItemStack item, String command) {
-        setItem(slot, item, List.of(command));
+    public void setItem(int slot, @NotNull ItemStack item, @NotNull String command, @Nullable HashMap<String, String> replaces) {
+        setItem(slot, item, List.of(command), replaces);
+    }
+    public void setItem(int slot, @NotNull ItemStack item, @NotNull String command) {
+        setItem(slot, item, List.of(command), null);
+    }
+    public void setItem(int slot, @NotNull ItemStack item, @Nullable HashMap<String, String> replaces) {
+        setItem(slot, item, new ArrayList<>(), replaces);
     }
     public void setItem(int slot, @NotNull ItemStack item) {
-        setItem(slot, item, new ArrayList<>());
+        setItem(slot, item, new ArrayList<>(), null);
+    }
+    public void setItem(@Nullable YamlConfiguration config, @Nullable String materialPath, @NotNull String slot, @NotNull ItemStack item, @Nullable HashMap<String, String> replaces) {
+        if (slot.matches("\\d+")) {
+            setItem(Integer.parseInt(slot), item, replaces);
+        } else if (slot.matches("\\d+-\\d+")) {
+            String[] parts = slot.split("-");
+            int start = Integer.parseInt(parts[0]);
+            int end = Integer.parseInt(parts[1]);
+            if(config != null && materialPath != null && config.isList(materialPath)) {
+                List<Material> materials = new ArrayList<>();
+                config.getStringList(materialPath).forEach(m -> materials.add(MaterialUtils.getMaterial(m)));
+                for (int i = start; i <= end; i++) {
+                    item.setType(materials.get((int) (floor(random() * materials.size()))));
+                    setItem(i, item.clone(), replaces);
+                }
+            }else {
+                for (int i = start; i <= end; i++) {
+                    setItem(i, item.clone(), replaces);
+                }
+            }
+        }
+    }
+    public void setItem(@Nullable Player player, @NotNull YamlConfiguration config, @NotNull String path, @Nullable String replace, @Nullable List<String> replacers, boolean addIfEmpty) {
+        String materialPath = formPath(path, "material");
+        String slotPath = formPath(path, "slot");
+        String slot = config.getString(slotPath);
+        ItemStack item;
+        assert slot != null;
+        if (slot.matches("\\d+")) {
+            item = getItemFromConfig(player, config, path);
+            HashMap<String, String> hash = new HashMap<>();
+            if (replace != null && replacers != null && !replacers.isEmpty()) {
+                hash.put(replace, replacers.get(0));
+                setItem(Integer.parseInt(slot), item, hash);
+                return;
+            }
+            if(addIfEmpty) {
+                setItem(Integer.parseInt(slot), item, hash);
+            }
+        } else if (slot.matches("\\d+-\\d+")) {
+            String[] parts = slot.split("-");
+            int start = Integer.parseInt(parts[0]);
+            int end = Integer.parseInt(parts[1]);
+            if(config.isList(materialPath)) {
+                List<Material> materials = new ArrayList<>();
+                config.getStringList(materialPath).forEach(m -> materials.add(MaterialUtils.getMaterial(m)));
+                for (int i = start; i <= end; i++) {
+                    HashMap<String, String> hash = new HashMap<>();
+                    if (replace != null && replacers != null && !replacers.isEmpty()) {
+                        hash.put(replace, replacers.get(0));
+                        item = getItemFromConfig(player, config, path, hash);
+                        item.setType(materials.get((int) (floor(random() * materials.size()))));
+                        setItem(i, item.clone(), hash);
+                        replacers.remove(0);
+                        continue;
+                    }
+                    if(addIfEmpty) {
+                        item = getItemFromConfig(player, config, path);
+                        item.setType(materials.get((int) (floor(random() * materials.size()))));
+                        setItem(i, item.clone());
+                    }
+                }
+            }else {
+                for (int i = start; i <= end; i++) {
+                    HashMap<String, String> hash = new HashMap<>();
+                    if (replace != null && replacers != null && !replacers.isEmpty()) {
+                        hash.put(replace, replacers.get(0));
+                        item = getItemFromConfig(player, config, path, hash);
+                        setItem(i, item.clone(), hash);
+                        replacers.remove(0);
+                        continue;
+                    }
+                    if(addIfEmpty) {
+                        item = getItemFromConfig(player, config, path);
+                        setItem(i, item.clone());
+                    }
+                }
+            }
+        }
+    }
+    public void setItem(@Nullable Player player, @NotNull YamlConfiguration config, @NotNull String path, @Nullable String replace, @Nullable List<String> replacers) {
+        setItem(player, config, path, replace, replacers, false);
     }
 
     /**
