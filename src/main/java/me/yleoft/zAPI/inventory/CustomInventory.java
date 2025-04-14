@@ -1,6 +1,5 @@
 package me.yleoft.zAPI.inventory;
 
-import me.yleoft.zAPI.utils.ItemStackUtils;
 import me.yleoft.zAPI.utils.MaterialUtils;
 import me.yleoft.zAPI.utils.NbtUtils;
 import org.bukkit.Bukkit;
