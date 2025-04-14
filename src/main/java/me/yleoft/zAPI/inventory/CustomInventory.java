@@ -34,7 +34,7 @@ public class CustomInventory {
     public static String configPathInventory = "Inventory";
     public static String configPathItems = "Items";
 
-    private final String inventoryName;
+    private String inventoryName;
     private final int rows;
     private HashMap<Integer, ItemStack> items = new HashMap<>();
 
@@ -198,9 +198,27 @@ public class CustomInventory {
         items.remove(slot);
     }
 
+    /**
+     * Sets the name of the inventory.
+     * @param inventoryName The name of the inventory.
+     */
+    public void setInventoryName(@NotNull String inventoryName) {
+        this.inventoryName = inventoryName;
+    }
+
+    /**
+     * Gets the name of the inventory.
+     * @return The name of the inventory.
+     */
+    @NotNull
     public String getInventoryName() {
         return inventoryName;
     }
+
+    /**
+     * Gets the number of rows in the inventory.
+     * @return The number of rows in the inventory.
+     */
     public int getRows() {
         return rows;
     }
