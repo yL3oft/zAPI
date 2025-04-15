@@ -57,7 +57,7 @@ public class CustomInventory {
      * @param config The YamlConfiguration file to load the inventory from.
      */
     public CustomInventory(@Nullable Player player, @NotNull YamlConfiguration config) {
-        this.inventoryName = stringUtils.transform(player, requireNonNull(config.getString(formPath(configPathInventory, "title"))));
+        this.inventoryName = config.getString(formPath(configPathInventory, "title"));
         this.rows = config.getInt(formPath(configPathInventory, "rows"));
 
         for(String itemPath : config.getConfigurationSection(configPathItems).getKeys(false)) {
@@ -246,7 +246,7 @@ public class CustomInventory {
      * @return The created inventory.
      */
     public Inventory getInventory() {
-        Inventory inv = Bukkit.createInventory(null, rows*9, inventoryName);
+        Inventory inv = Bukkit.createInventory(null, rows*9, stringUtils.transform(inventoryName));
         inv.setContents(getItemsArray());
         return inv;
     }
