@@ -5,18 +5,29 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public abstract class LocationUtils {
 
-    private static final Set<Material> blacklistedGround = Set.of(
-            Material.CACTUS,
-            Material.FIRE,
-            Material.LAVA,
-            Material.MAGMA_BLOCK,
-            Material.CAMPFIRE,
-            Material.SOUL_FIRE
-    );
+    private static final Set<Material> blacklistedGround = new HashSet<>();
+
+    static {
+        addIfExists("CACTUS");
+        addIfExists("FIRE");
+        addIfExists("LAVA");
+        addIfExists("MAGMA_BLOCK");
+        addIfExists("CAMPFIRE");
+        addIfExists("SOUL_FIRE");
+    }
+
+    private static void addIfExists(String materialName) {
+        try {
+            Material mat = Material.valueOf(materialName);
+            blacklistedGround.add(mat);
+        } catch (IllegalArgumentException ignored) {
+        }
+    }
 
     public static Location findNearestSafeLocation(Location origin, int radius, int heightCheckRange) {
         if(isSafeLocation(origin)) return origin;
