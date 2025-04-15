@@ -3,6 +3,7 @@ package me.yleoft.zAPI.utils;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,7 +37,7 @@ public class StringUtils {
      * @param string The string to transform
      * @return The transformed string
      */
-    public String transform(@Nullable Player p, @NotNull String string) {
+    public String transform(@Nullable OfflinePlayer p, @NotNull String string) {
         string = hex(string);
         string = color(string);
         if(p != null) {
@@ -60,7 +61,7 @@ public class StringUtils {
      * @param string The string to apply placeholders to
      * @return The string with placeholders applied
      */
-    public String applyPlaceholders(@Nullable Player p, @NotNull String string) {
+    public String applyPlaceholders(@Nullable OfflinePlayer p, @NotNull String string) {
         if (zAPI.getPlugin().getServer().getPluginManager().isPluginEnabled("PlaceholderAPI"))
             string = PlaceholderAPI.setPlaceholders(p, string);
         return applyOwnPlaceholders(p, string);
@@ -72,7 +73,7 @@ public class StringUtils {
      * @param string The string to apply placeholders to
      * @return The string with placeholders applied
      */
-    public String applyOwnPlaceholders(@Nullable Player p, @NotNull String string) {
+    public String applyOwnPlaceholders(@Nullable OfflinePlayer p, @NotNull String string) {
        return zAPI.getPlaceholderAPIHandler().applyPlaceholders(p, string);
     }
 

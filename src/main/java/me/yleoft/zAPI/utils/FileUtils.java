@@ -2,11 +2,13 @@ package me.yleoft.zAPI.utils;
 
 import com.google.common.base.Charsets;
 import me.yleoft.zAPI.zAPI;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.logging.Level;
 
 /**
@@ -15,7 +17,7 @@ import java.util.logging.Level;
  */
 public class FileUtils {
 
-    private zAPI zAPI;
+    private final zAPI zAPI;
 
     private FileConfiguration newConfig = null;
     private File configFile = null;
@@ -64,19 +66,30 @@ public class FileUtils {
     /**
      * Reloads the configuration file.
      */
+
     public void reloadConfig(boolean copyDefaults) {
-        newConfig = YamlConfiguration.loadConfiguration(configFile);
+        try {
+            newConfig = new YamlConfiguration();
+            newConfig.load(configFile);
 
-        final InputStream defConfigStream = zAPI.getPlugin().getResource(resource);
-        if (defConfigStream == null) {
-            return;
+            final InputStream defConfigStream = zAPI.getPlugin().getResource(resource);
+            if (defConfigStream != null) {
+                newConfig.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(defConfigStream, Charsets.UTF_8)));
+            }
+
+            saveDefaultConfig();
+            getConfig().options().copyDefaults(copyDefaults);
+            saveConfig();
+        } catch (IOException | InvalidConfigurationException ex) {
+            zAPI.getPlugin().getLogger().log(Level.SEVERE, "Failed to load YAML file: " + configFile.getName(), ex);
+
+            zAPI.getPlugin().getServer().getConsoleSender().sendMessage(zAPI.getColoredPluginName()
+                    + "§cError loading §f" + configFile.getName() + "§c! Backing up and restoring default config...");
+
+            backupBrokenConfig();
+            saveDefaultConfig(); // Restore default
+            reloadConfig(copyDefaults); // Try again with fresh config
         }
-
-        newConfig.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(defConfigStream, Charsets.UTF_8)));
-
-        saveDefaultConfig();
-        getConfig().options().copyDefaults(copyDefaults);
-        saveConfig();
     }
     public void reloadConfig() {
         reloadConfig(true);
@@ -87,9 +100,11 @@ public class FileUtils {
      */
     public void saveConfig() {
         try {
-            getConfig().save(configFile);
+            if (newConfig != null) {
+                newConfig.save(configFile);
+            }
         } catch (IOException ex) {
-            zAPI.getPlugin().getLogger().log(Level.SEVERE, "Could not save config to " + configFile, ex);
+            zAPI.getPlugin().getLogger().log(Level.SEVERE, "Could not save config to " + configFile.getName(), ex);
         }
     }
 
@@ -103,6 +118,26 @@ public class FileUtils {
     }
 
     /**
+     * Backs up the configuration file if it is broken.
+     */
+    private void backupBrokenConfig() {
+        if (!configFile.exists()) return;
+
+        String backupName = configFile.getName() + ".broken." + System.currentTimeMillis();
+        File backupFile = new File(configFile.getParentFile(), backupName);
+
+        try {
+            if (configFile.renameTo(backupFile)) {
+                zAPI.getPlugin().getLogger().warning("Backed up broken config to: " + backupFile.getName());
+            } else {
+                zAPI.getPlugin().getLogger().warning("Failed to backup broken config file.");
+            }
+        } catch (Exception e) {
+            zAPI.getPlugin().getLogger().log(Level.SEVERE, "Error while backing up config file", e);
+        }
+    }
+
+    /**
      * Saves an embedded resource to the plugin's data folder.
      *
      * @param resourcePath The path to the resource.
@@ -110,7 +145,7 @@ public class FileUtils {
      * @throws IllegalArgumentException if the resource path is null or empty.
      */
     public void saveResource(String resourcePath, boolean replace) {
-        if (resourcePath == null || resourcePath.equals("")) {
+        if (resourcePath == null || resourcePath.isEmpty()) {
             throw new IllegalArgumentException("ResourcePath cannot be null or empty");
         }
 
@@ -121,32 +156,28 @@ public class FileUtils {
         }
 
         File outFile = new File(zAPI.getPlugin().getDataFolder(), resourcePath);
-        int lastIndex = resourcePath.lastIndexOf('/');
-        File outDir = new File(zAPI.getPlugin().getDataFolder(), resourcePath.substring(0, lastIndex >= 0 ? lastIndex : 0));
+        File outDir = outFile.getParentFile();
 
-        if (!outDir.exists()) {
-            outDir.mkdirs();
+        if (!outDir.exists() && !outDir.mkdirs()) {
+            zAPI.getPlugin().getLogger().log(Level.WARNING, "Failed to create directory: " + outDir);
+            return;
         }
 
-        try {
-            if (!outFile.exists() || replace) {
-                OutputStream out = new FileOutputStream(outFile);
+        if (!outFile.exists() || replace) {
+            try (OutputStream out = Files.newOutputStream(outFile.toPath())) {
                 byte[] buf = new byte[1024];
                 int len;
                 while ((len = in.read(buf)) > 0) {
                     out.write(buf, 0, len);
                 }
-                out.close();
-                in.close();
 
-                zAPI.getPlugin().getServer().getConsoleSender().sendMessage(
-                        zAPI.getColoredPluginName()+"§eFile §e'"+resourcePath+"' §fhave been created!"
-                );
-            } else {
-                zAPI.getPlugin().getLogger().log(Level.WARNING, "Could not save " + outFile.getName() + " to " + outFile + " because " + outFile.getName() + " already exists.");
+                zAPI.getPlugin().getServer().getConsoleSender().sendMessage(zAPI.getColoredPluginName()
+                        + "§eFile §f'" + resourcePath + "' §ehas been created.");
+            } catch (IOException ex) {
+                zAPI.getPlugin().getLogger().log(Level.SEVERE, "Could not save " + outFile.getName() + " to " + outFile, ex);
             }
-        } catch (IOException ex) {
-            zAPI.getPlugin().getLogger().log(Level.SEVERE, "Could not save " + outFile.getName() + " to " + outFile, ex);
+        } else {
+            zAPI.getPlugin().getLogger().log(Level.WARNING, "File " + outFile.getName() + " already exists and won't be replaced.");
         }
     }
 

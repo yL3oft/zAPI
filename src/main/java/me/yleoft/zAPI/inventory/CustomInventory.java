@@ -4,6 +4,7 @@ import me.yleoft.zAPI.utils.MaterialUtils;
 import me.yleoft.zAPI.utils.NbtUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -57,7 +58,7 @@ public class CustomInventory {
      * @param config The YamlConfiguration file to load the inventory from.
      */
     public CustomInventory(@Nullable Player player, @NotNull YamlConfiguration config) {
-        this.inventoryName = config.getString(formPath(configPathInventory, "title"));
+        this.inventoryName = stringUtils.transform(player, requireNonNull(config.getString(formPath(configPathInventory, "title"))));
         this.rows = config.getInt(formPath(configPathInventory, "rows"));
 
         for(String itemPath : config.getConfigurationSection(configPathItems).getKeys(false)) {
@@ -202,8 +203,10 @@ public class CustomInventory {
      * Sets the name of the inventory.
      * @param inventoryName The name of the inventory.
      */
-    public void setInventoryName(@NotNull String inventoryName) {
-        this.inventoryName = inventoryName;
+    public void setInventoryName(@Nullable OfflinePlayer player, @NotNull String inventoryName) {
+        this.inventoryName = stringUtils.transform(player, inventoryName);
+    }public void setInventoryName(@NotNull String inventoryName) {
+        setInventoryName(null, inventoryName);
     }
 
     /**

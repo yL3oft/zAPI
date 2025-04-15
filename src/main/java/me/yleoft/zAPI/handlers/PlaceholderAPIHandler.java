@@ -1,6 +1,7 @@
 package me.yleoft.zAPI.handlers;
 
 import me.yleoft.zAPI.zAPI;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +27,7 @@ public class PlaceholderAPIHandler {
      * @param params The string to apply placeholders to
      * @return The parsed placeholder
      */
-    public String applyHookPlaceholders(@Nullable Player player, @NotNull String params) {
+    public String applyHookPlaceholders(@Nullable OfflinePlayer player, @NotNull String params) {
         return "";
     }
 
@@ -36,8 +37,8 @@ public class PlaceholderAPIHandler {
      * @param text The string to apply placeholders to
      * @return The string with placeholders applied
      */
-    public String applyPlaceholders(@Nullable Player player, @NotNull String text) {
-        if (text == null || !text.contains("%")) return text;
+    public String applyPlaceholders(@Nullable OfflinePlayer player, @NotNull String text) {
+        if (!text.contains("%")) return text;
 
         Pattern pattern = Pattern.compile("%"+zAPI.getPlugin().getDescription().getName().toLowerCase()+"_([^%]+)%");
         Matcher matcher = pattern.matcher(text);
