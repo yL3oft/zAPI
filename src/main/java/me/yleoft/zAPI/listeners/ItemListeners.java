@@ -2,6 +2,7 @@ package me.yleoft.zAPI.listeners;
 
 import me.yleoft.zAPI.utils.NbtUtils;
 import me.yleoft.zAPI.zAPI;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -40,7 +41,7 @@ public class ItemListeners extends NbtUtils implements Listener {
         }
         Player player = (Player) event.getWhoClicked();
 
-        if (event.getCurrentItem() == null) {
+        if (event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR || event.getCurrentItem().getAmount() < 0) {
             return;
         }
         ItemStack item = event.getCurrentItem();
