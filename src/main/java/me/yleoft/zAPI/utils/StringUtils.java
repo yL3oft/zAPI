@@ -78,13 +78,21 @@ public abstract class StringUtils {
      * @return The string with hex color codes applied
      */
     public static String hex(@NotNull String string) {
-        Matcher matcher = Pattern.compile("&#([A-Za-z0-9]{6})").matcher(string);
-        StringBuilder result = new StringBuilder();
+        Pattern pattern = Pattern.compile("&#([A-Fa-f0-9]{6})");
+        Matcher matcher = pattern.matcher(string);
+        StringBuffer result = new StringBuffer();
+
         while (matcher.find()) {
-            String replacement = "&x" + matcher.group(1).replaceAll("(.)", "&$1");
-            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+            String hex = matcher.group(1);
+            StringBuilder replacement = new StringBuilder("&x");
+            for (int i = 0; i < hex.length(); i++) {
+                replacement.append("&").append(hex.charAt(i));
+            }
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement.toString()));
         }
-        return matcher.appendTail(result).toString();
+
+        matcher.appendTail(result);
+        return result.toString();
     }
 
 }
