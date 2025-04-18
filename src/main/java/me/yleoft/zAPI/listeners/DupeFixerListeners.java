@@ -20,17 +20,6 @@ import static me.yleoft.zAPI.inventory.CustomInventory.mark;
  */
 public class DupeFixerListeners implements Listener {
 
-    private zAPI zAPI;
-
-    /**
-     * Constructor for DupeFixerListeners.
-     *
-     * @param zAPI The zAPI instance to be used for plugin interactions.
-     */
-    public DupeFixerListeners(@NotNull zAPI zAPI) {
-        this.zAPI = zAPI;
-    }
-
     /**
      * Searches for a marked item in the player's inventory and removes it if found.
      */

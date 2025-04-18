@@ -1,10 +1,10 @@
 package me.yleoft.zAPI;
 
+import de.tr7zw.changeme.nbtapi.NBT;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.yleoft.zAPI.handlers.PlaceholderAPIHandler;
 import me.yleoft.zAPI.listeners.*;
 import me.yleoft.zAPI.managers.*;
-import me.yleoft.zAPI.utils.StringUtils;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -13,44 +13,35 @@ import org.jetbrains.annotations.NotNull;
 
 public class zAPI {
 
-    private static zAPI zAPI;
-
     public static String customCommandNBT = "zAPI:customCommand";
-    public static StringUtils stringUtils;
-    public PlaceholderAPIHandler placeholderAPIHandler;
+    public static PlaceholderAPIHandler placeholderAPIHandler;
 
-    private final JavaPlugin plugin;
-    protected final PluginYAMLManager pym;
-    protected final FileManager fm;
-    protected String pluginName;
-    protected String coloredPluginName;
-    protected Object papi;
-    protected Object economy;
+    protected static JavaPlugin plugin;
+    protected static String pluginName;
+    protected static String coloredPluginName;
+    protected static Object papi;
+    protected static Object economy;
 
     /**
-     * Constructor for zAPI
-     *
+     * Initialize zAPI
      * @param plugin The plugin that is using zAPI
      * @param pluginName The custom name of the plugin
      * @param coloredPluginName The custom colored name of the plugin
+     * @param useNBTAPI If the plugin should use NBTAPI
      */
-    public zAPI(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName, boolean useNBTAPI) {
-        this.plugin = plugin;
-        this.pluginName = pluginName;
-        this.coloredPluginName = coloredPluginName;
-        zAPI = zAPI.this;
-        pym = new PluginYAMLManager(zAPI);
-        fm = new FileManager(zAPI);
-        stringUtils = new StringUtils(this);
-        placeholderAPIHandler = new PlaceholderAPIHandler(this);
+    public static void init(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName, boolean useNBTAPI) {
+        zAPI.plugin = plugin;
+        zAPI.pluginName = pluginName;
+        zAPI.coloredPluginName = coloredPluginName;
+        placeholderAPIHandler = new PlaceholderAPIHandler();
         if(useNBTAPI) {
-            pym.registerEvent(new DupeFixerListeners(this));
-            pym.registerEvent(new ItemListeners(this));
+            PluginYAMLManager.registerEvent(new DupeFixerListeners());
+            PluginYAMLManager.registerEvent(new ItemListeners());
         }
         plugin.getLogger().info("[zAPI] Initialized by " + plugin.getName());
     }
-    public zAPI(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName) {
-        this(plugin, pluginName, coloredPluginName, false);
+    public static void init(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName) {
+        init(plugin, pluginName, coloredPluginName, false);
     }
 
     /**
@@ -59,7 +50,7 @@ public class zAPI {
      * @return The class of the plugin using zAPI
      */
     @NotNull
-    public JavaPlugin getPlugin() {
+    public static JavaPlugin getPlugin() {
         return plugin;
     }
 
@@ -69,11 +60,11 @@ public class zAPI {
      * @return The name of the plugin
      */
     @NotNull
-    public String getPluginName() {
+    public static String getPluginName() {
         return pluginName;
     }
-    public void setPluginName(@NotNull String pluginName) {
-        this.pluginName = pluginName;
+    public static void setPluginName(@NotNull String pluginName) {
+        zAPI.pluginName = pluginName;
     }
 
     /**
@@ -82,31 +73,11 @@ public class zAPI {
      * @return The colored name of the plugin
      */
     @NotNull
-    public String getColoredPluginName() {
+    public static String getColoredPluginName() {
         return coloredPluginName;
     }
-    public void setColoredPluginName(@NotNull String coloredPluginName) {
-        this.coloredPluginName = coloredPluginName;
-    }
-
-    /**
-     * Returns the {@link PluginYAMLManager}
-     *
-     * @return {@link PluginYAMLManager}
-     */
-    @NotNull
-    public PluginYAMLManager getPluginYAMLManager() {
-        return pym;
-    }
-
-    /**
-     * Returns the {@link FileManager}
-     *
-     * @return {@link FileManager}
-     */
-    @NotNull
-    public FileManager getFileManager() {
-        return fm;
+    public static void setColoredPluginName(@NotNull String coloredPluginName) {
+        zAPI.coloredPluginName = coloredPluginName;
     }
 
     /**
@@ -115,7 +86,7 @@ public class zAPI {
      * @return The {@link me.clip.placeholderapi.expansion.PlaceholderExpansion} class of the plugin
      * @throws RuntimeException if the PlaceholderAPI is not enabled
      */
-    public PlaceholderExpansion getPlaceholderExpansion() {
+    public static PlaceholderExpansion getPlaceholderExpansion() {
         if(papi == null) {
             throw new RuntimeException("PlaceholderAPI is not enabled");
         }
@@ -127,7 +98,7 @@ public class zAPI {
      *
      * @param pluginId The ID of the plugin on <a href="https://bstats.org/">bStats</a>
      */
-    public void startMetrics(int pluginId) {
+    public static void startMetrics(int pluginId) {
         Metrics metrics = new Metrics(plugin, pluginId);
     }
 
@@ -135,7 +106,7 @@ public class zAPI {
      * Set the {@link PlaceholderAPIHandler} for the plugin
      * @param handler The {@link PlaceholderAPIHandler} class of the plugin
      */
-    public void setPlaceholderAPIHandler(@NotNull PlaceholderAPIHandler handler) {
+    public static void setPlaceholderAPIHandler(@NotNull PlaceholderAPIHandler handler) {
         placeholderAPIHandler = handler;
     }
 
@@ -144,16 +115,19 @@ public class zAPI {
      *
      * @return The {@link PlaceholderAPIHandler} class of the plugin
      */
-    public PlaceholderAPIHandler getPlaceholderAPIHandler() {
+    public static PlaceholderAPIHandler getPlaceholderAPIHandler() {
         return placeholderAPIHandler;
     }
 
     /**
      * Register the <a href="https://github.com/PlaceholderAPI/PlaceholderAPI/wiki/PlaceholderExpansion">PlaceholderAPI Expansion</a> for you
-     * @param expansion The {@link me.clip.placeholderapi.expansion.PlaceholderExpansion} class of the plugin
+     * @param author The author of the plugin
+     * @param version The version of the plugin
+     * @param canRegister If the expansion can be registered
+     * @param persist If the expansion should persist
      */
-    public void registerPlaceholderExpansion(@NotNull String author, @NotNull String version, boolean canRegister, boolean persist) {
-        if (plugin.getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
+    public static void registerPlaceholderExpansion(@NotNull String author, @NotNull String version, boolean canRegister, boolean persist) {
+        if (plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             papi = new PlaceholderExpansion() {
                 @Override
                 public @NotNull String getIdentifier() {
@@ -192,7 +166,7 @@ public class zAPI {
     /**
      * Unregisters the <a href="https://github.com/PlaceholderAPI/PlaceholderAPI/wiki/PlaceholderExpansion">PlaceholderAPI Expansion</a>
      */
-    public void unregisterPlaceholderExpansion() {
+    public static void unregisterPlaceholderExpansion() {
         if(papi != null) {
             ((PlaceholderExpansion)papi).unregister();
         }
@@ -202,7 +176,7 @@ public class zAPI {
      * Setups the VaultAPI economy
      * @throws RuntimeException if Vault is not present on the server
      */
-    private void setupEconomy() {
+    private static void setupEconomy() {
         if (plugin.getServer().getPluginManager().getPlugin("Vault") == null) {
             throw new RuntimeException("Vault is not present on the server");
         }

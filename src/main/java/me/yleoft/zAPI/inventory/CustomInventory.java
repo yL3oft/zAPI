@@ -2,6 +2,7 @@ package me.yleoft.zAPI.inventory;
 
 import me.yleoft.zAPI.utils.MaterialUtils;
 import me.yleoft.zAPI.utils.NbtUtils;
+import me.yleoft.zAPI.utils.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -20,7 +21,6 @@ import static java.util.Objects.requireNonNull;
 import static me.yleoft.zAPI.utils.ConfigUtils.formPath;
 import static me.yleoft.zAPI.utils.ItemStackUtils.*;
 import static me.yleoft.zAPI.utils.NbtUtils.addCustomCommands;
-import static me.yleoft.zAPI.zAPI.stringUtils;
 
 /**
  * CustomInventory class to create a custom inventory with a specified name and number of rows.
@@ -58,7 +58,7 @@ public class CustomInventory {
      * @param config The YamlConfiguration file to load the inventory from.
      */
     public CustomInventory(@Nullable Player player, @NotNull YamlConfiguration config) {
-        this.inventoryName = stringUtils.transform(player, requireNonNull(config.getString(formPath(configPathInventory, "title"))));
+        this.inventoryName = StringUtils.transform(player, requireNonNull(config.getString(formPath(configPathInventory, "title"))));
         this.rows = config.getInt(formPath(configPathInventory, "rows"));
 
         for(String itemPath : config.getConfigurationSection(configPathItems).getKeys(false)) {
@@ -204,7 +204,7 @@ public class CustomInventory {
      * @param inventoryName The name of the inventory.
      */
     public void setInventoryName(@Nullable OfflinePlayer player, @NotNull String inventoryName) {
-        this.inventoryName = stringUtils.transform(player, inventoryName);
+        this.inventoryName = StringUtils.transform(player, inventoryName);
     }public void setInventoryName(@NotNull String inventoryName) {
         setInventoryName(null, inventoryName);
     }
@@ -249,7 +249,7 @@ public class CustomInventory {
      * @return The created inventory.
      */
     public Inventory getInventory() {
-        Inventory inv = Bukkit.createInventory(null, rows*9, stringUtils.transform(inventoryName));
+        Inventory inv = Bukkit.createInventory(null, rows*9, StringUtils.transform(inventoryName));
         inv.setContents(getItemsArray());
         return inv;
     }

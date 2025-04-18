@@ -20,16 +20,6 @@ import static me.yleoft.zAPI.inventory.CustomInventory.mark;
  */
 public class ItemListeners extends NbtUtils implements Listener {
 
-    private zAPI zAPI;
-
-    /**
-     * ItemListeners constructor
-     * @param zAPI zAPI instance
-     */
-    public ItemListeners(@NotNull zAPI zAPI) {
-        this.zAPI = zAPI;
-    }
-
     /**
      * Search for custom commands in the item clicked.
      * @param event {@link InventoryClickEvent}
