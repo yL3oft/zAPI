@@ -14,7 +14,6 @@ import static java.util.Objects.requireNonNull;
 import static me.yleoft.zAPI.utils.ConfigUtils.formPath;
 import static me.yleoft.zAPI.utils.MaterialUtils.isLegacyMaterial;
 import static me.yleoft.zAPI.utils.NbtUtils.addCustomCommands;
-import static me.yleoft.zAPI.zAPI.stringUtils;
 
 public abstract class ItemStackUtils {
 
@@ -68,16 +67,16 @@ public abstract class ItemStackUtils {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             if (config.contains(namePath))
-                meta.setDisplayName(stringUtils.transform(player, requireNonNull(config.getString(namePath))));
+                meta.setDisplayName(StringUtils.transform(player, requireNonNull(config.getString(namePath))));
             if (config.contains(lorePath)) {
                 List<String> lore;
                 if (config.isList(lorePath)) {
                     lore = config.getStringList(lorePath);
                     List<String> transformedLore = new ArrayList<>();
-                    lore.forEach(loreLine -> transformedLore.add(stringUtils.transform(player, loreLine)));
+                    lore.forEach(loreLine -> transformedLore.add(StringUtils.transform(player, loreLine)));
                     lore = transformedLore;
                 } else {
-                    lore = List.of(stringUtils.transform(player, requireNonNull(config.getString(lorePath))));
+                    lore = List.of(StringUtils.transform(player, requireNonNull(config.getString(lorePath))));
                 }
                 meta.setLore(lore);
             }

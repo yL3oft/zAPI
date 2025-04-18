@@ -17,8 +17,6 @@ import java.util.logging.Level;
  */
 public class FileUtils {
 
-    private final zAPI zAPI;
-
     private FileConfiguration newConfig = null;
     private File configFile = null;
     private String resource = null;
@@ -26,13 +24,11 @@ public class FileUtils {
     /**
      * Creates a new FileUtils instance.
      *
-     * @param zAPI      The zAPI instance.
-     * @param f         The file to be used.
+     * @param file       The file to be used.
      * @param resource   The resource path.
      */
-    public FileUtils(@NotNull zAPI zAPI, @NotNull File f, @NotNull String resource) {
-        this.zAPI = zAPI;
-        this.configFile = f;
+    public FileUtils(@NotNull File file, @NotNull String resource) {
+        this.configFile = file;
         this.resource = resource;
     }
 

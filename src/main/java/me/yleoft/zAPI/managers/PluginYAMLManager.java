@@ -21,21 +21,11 @@ import java.util.Map.Entry;
  * PluginYAMLManager class to manage commands and permissions for a Bukkit plugin.
  * It allows registering and unregistering commands and permissions dynamically.
  */
-public class PluginYAMLManager {
+public abstract class PluginYAMLManager {
 
-    private PluginDescriptionFile file;
-    private List<Command> cmds = new ArrayList<>();
-    private List<String> perms = new ArrayList<>();
-    private zAPI main;
-
-    /**
-     * Constructor to initialize the PluginYAMLManager with the zAPI instance.
-     * @param zAPI The zAPI instance.
-     */
-    public PluginYAMLManager(@NotNull zAPI zAPI) {
-        this.main = zAPI;
-        this.file = main.getPlugin().getDescription();
-    }
+    private static final PluginDescriptionFile file = zAPI.getPlugin().getDescription();
+    private static List<Command> cmds = new ArrayList<>();
+    private static List<String> perms = new ArrayList<>();
 
     /**
      * CommandExecutor that does nothing and returns false.
@@ -56,11 +46,12 @@ public class PluginYAMLManager {
      * Syncs the commands registered in the server.
      * This method is used to ensure that all commands are properly registered.
      */
-    public void syncCommands() {
+    public static void syncCommands() {
         try {
-            Method syncCommandsMethod = main.getPlugin().getServer().getClass().getDeclaredMethod("syncCommands");
+            Method syncCommandsMethod = zAPI.getPlugin().getServer().getClass().getDeclaredMethod("syncCommands");
             syncCommandsMethod.setAccessible(true);
-            syncCommandsMethod.invoke(main.getPlugin().getServer());
+            syncCommandsMethod.invoke(zAPI.getPlugin().getServer());
+        } catch (NoSuchMethodException ignored) {
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException("Could not invoke syncCommands method", e);
         }
@@ -70,7 +61,7 @@ public class PluginYAMLManager {
      * Unregisters all commands registered by this plugin.
      * This method is used to clean up commands when the plugin is disabled or reloaded.
      */
-    public void unregisterCommands() {
+    public static void unregisterCommands() {
         try {
             Field f = Bukkit.getPluginManager().getClass().getDeclaredField("commandMap");
             f.setAccessible(true);
@@ -118,7 +109,7 @@ public class PluginYAMLManager {
      * @param description The description of the command.
      * @param aliases The aliases for the command.
      */
-    public void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @NotNull String description, @NotNull String... aliases){
+    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @NotNull String description, @NotNull String... aliases){
         if(!file.getCommands().containsKey(command)) {
             try {
                 Constructor<PluginCommand> c = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
@@ -126,7 +117,7 @@ public class PluginYAMLManager {
                 c.setAccessible(true);
                 f.setAccessible(true);
 
-                PluginCommand cmd = c.newInstance(command, main.getPlugin());
+                PluginCommand cmd = c.newInstance(command, zAPI.getPlugin());
                 cmd.setDescription(description);
                 cmd.setExecutor(ce);
 
@@ -138,18 +129,18 @@ public class PluginYAMLManager {
                 cmd.setAliases(aliasesList);
 
                 CommandMap commandMap = (CommandMap) f.get(Bukkit.getPluginManager());
-                commandMap.register(main.getPluginName(), cmd);
+                commandMap.register(zAPI.getPluginName(), cmd);
                 cmds.add(cmd);
 
-                main.getPlugin().getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
-                        main.getColoredPluginName()+"&aLoaded command &e/"+command
+                zAPI.getPlugin().getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
+                        zAPI.getColoredPluginName()+"&aLoaded command &e/"+command
                 ));
             }catch (Exception e) {
                 e.printStackTrace();
-                main.getPlugin().getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
+                zAPI.getPlugin().getLogger().severe(zAPI.getColoredPluginName()+"§4Couldn't load command §e"+command);
             }
         }else {
-            main.getPlugin().getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
+            zAPI.getPlugin().getLogger().severe(zAPI.getColoredPluginName()+"§4Couldn't load command §e"+command);
         }
     }
 
@@ -161,7 +152,7 @@ public class PluginYAMLManager {
      * @param description The description of the command.
      * @param aliases The aliases for the command.
      */
-    public void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @NotNull TabCompleter completer, @NotNull String description, @NotNull String... aliases){
+    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @NotNull TabCompleter completer, @NotNull String description, @NotNull String... aliases){
         if(!file.getCommands().containsKey(command)) {
             try {
                 Constructor<PluginCommand> c = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
@@ -169,7 +160,7 @@ public class PluginYAMLManager {
                 c.setAccessible(true);
                 f.setAccessible(true);
 
-                PluginCommand cmd = c.newInstance(command, main.getPlugin());
+                PluginCommand cmd = c.newInstance(command, zAPI.getPlugin());
                 cmd.setDescription(description);
                 cmd.setExecutor(ce);
                 cmd.setTabCompleter(completer);
@@ -182,59 +173,59 @@ public class PluginYAMLManager {
                 cmd.setAliases(aliasesList);
 
                 CommandMap commandMap = (CommandMap) f.get(Bukkit.getPluginManager());
-                commandMap.register(main.getPluginName(), cmd);
+                commandMap.register(zAPI.getPluginName(), cmd);
                 cmds.add(cmd);
 
-                main.getPlugin().getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
-                        main.getColoredPluginName()+"&aLoaded command &e/"+command
+                zAPI.getPlugin().getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
+                        zAPI.getColoredPluginName()+"&aLoaded command &e/"+command
                 ));
             }catch (Exception e) {
                 e.printStackTrace();
-                main.getPlugin().getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
+                zAPI.getPlugin().getLogger().severe(zAPI.getColoredPluginName()+"§4Couldn't load command §e"+command);
             }
         }else {
-            main.getPlugin().getLogger().severe(main.getColoredPluginName()+"§4Couldn't load command §e"+command);
+            zAPI.getPlugin().getLogger().severe(zAPI.getColoredPluginName()+"§4Couldn't load command §e"+command);
         }
     }
 
     /**
      * Unregisters all permissions registered by this plugin.
      */
-    public void unregisterPermissions() {
+    public static void unregisterPermissions() {
         for(String perm : perms) {
             unregisterPermission(perm);
         }
         Bukkit.getPluginManager().getPermissions().forEach(permission -> {
-            if(permission.getName().startsWith(main.getColoredPluginName().toLowerCase())) {
+            if(permission.getName().startsWith(zAPI.getColoredPluginName().toLowerCase())) {
                 unregisterPermission(permission);
             }
         });
     }
 
-    public void unregisterPermission(@NotNull String permission) {
+    public static void unregisterPermission(@NotNull String permission) {
         Bukkit.getPluginManager().removePermission(permission);
     }
-    public void unregisterPermission(@NotNull Permission permission) {
+    public static void unregisterPermission(@NotNull Permission permission) {
         Bukkit.getPluginManager().removePermission(permission);
     }
 
-    public void registerPermission(@NotNull String permission) {
+    public static void registerPermission(@NotNull String permission) {
         Bukkit.getPluginManager().addPermission(new Permission(permission));
         perms.add(permission);
     }
-    public void registerPermission(@NotNull String permission, @NotNull String description) {
+    public static void registerPermission(@NotNull String permission, @NotNull String description) {
         Bukkit.getPluginManager().addPermission(new Permission(permission, description));
         perms.add(permission);
     }
-    public void registerPermission(@NotNull String permission, @NotNull PermissionDefault def) {
+    public static void registerPermission(@NotNull String permission, @NotNull PermissionDefault def) {
         Bukkit.getPluginManager().addPermission(new Permission(permission, def));
         perms.add(permission);
     }
-    public void registerPermission(@NotNull String permission, @NotNull String description, @NotNull PermissionDefault def) {
+    public static void registerPermission(@NotNull String permission, @NotNull String description, @NotNull PermissionDefault def) {
         Bukkit.getPluginManager().addPermission(new Permission(permission, description, def));
         perms.add(permission);
     }
-    public void registerPermission(@NotNull String permission, @NotNull String description, @NotNull PermissionDefault def, @NotNull Map<String, Boolean> children) {
+    public static void registerPermission(@NotNull String permission, @NotNull String description, @NotNull PermissionDefault def, @NotNull Map<String, Boolean> children) {
         Bukkit.getPluginManager().addPermission(new Permission(permission, description, def, children));
         perms.add(permission);
     }
@@ -244,9 +235,9 @@ public class PluginYAMLManager {
      * @param command The name of the command.
      * @param tc The TabCompleter for the command.
      */
-    public void registerTabCompleter(@NotNull String command, @NotNull TabCompleter tc){
+    public static void registerTabCompleter(@NotNull String command, @NotNull TabCompleter tc){
         try {
-            Objects.requireNonNull(main.getPlugin().getCommand(command)).setTabCompleter(tc);
+            Objects.requireNonNull(zAPI.getPlugin().getCommand(command)).setTabCompleter(tc);
         }catch (Exception e) {
         }
     }
@@ -255,8 +246,8 @@ public class PluginYAMLManager {
      * Registers a Listener for the plugin.
      * @param l The Listener to register.
      */
-    public void registerEvent(@NotNull Listener l) {
-        main.getPlugin().getServer().getPluginManager().registerEvents(l, main.getPlugin());
+    public static void registerEvent(@NotNull Listener l) {
+        zAPI.getPlugin().getServer().getPluginManager().registerEvents(l, zAPI.getPlugin());
     }
 
 }

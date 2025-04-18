@@ -3,10 +3,8 @@ package me.yleoft.zAPI.utils;
 import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
 import java.util.Objects;
 
-import static java.util.Objects.requireNonNull;
 import static me.yleoft.zAPI.utils.ItemStackUtils.legacyColors;
 
 /**
