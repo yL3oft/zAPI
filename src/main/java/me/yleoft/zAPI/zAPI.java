@@ -34,6 +34,7 @@ public class zAPI {
         zAPI.pluginName = pluginName;
         zAPI.coloredPluginName = coloredPluginName;
         placeholderAPIHandler = new PlaceholderAPIHandler();
+        PluginYAMLManager.registerEvent(new PlayerListeners());
         if(useNBTAPI) {
             PluginYAMLManager.registerEvent(new DupeFixerListeners());
             PluginYAMLManager.registerEvent(new ItemListeners());

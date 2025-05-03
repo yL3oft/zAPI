@@ -4,12 +4,14 @@ import me.yleoft.zAPI.zAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.*;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -24,8 +26,9 @@ import java.util.Map.Entry;
 public abstract class PluginYAMLManager {
 
     private static final PluginDescriptionFile file = zAPI.getPlugin().getDescription();
-    private static List<Command> cmds = new ArrayList<>();
+    private static HashMap<Command, Double> cmds = new HashMap<>();
     private static List<String> perms = new ArrayList<>();
+    public static HashMap<Player, Long> cacheCooldown = new HashMap<>();
 
     /**
      * CommandExecutor that does nothing and returns false.
@@ -71,7 +74,7 @@ public abstract class PluginYAMLManager {
             Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
             HashMap<String, Command> commandsToCheck = new HashMap<String, Command>();
 
-            for (Command c : cmds) {
+            for (Command c : cmds.keySet()) {
                 commandsToCheck.put(c.getLabel().toLowerCase(), c);
                 commandsToCheck.put(c.getName().toLowerCase(), c);
                 c.getAliases().forEach(a -> commandsToCheck.put(a.toLowerCase(), c));
@@ -103,13 +106,15 @@ public abstract class PluginYAMLManager {
     }
 
     /**
-     * Registers a command with the specified name, executor, description, and aliases.
+     * Registers a command with the specified name, executor, tab completer, description, and aliases.
      * @param command The name of the command.
      * @param ce The CommandExecutor for the command.
+     * @param completer The TabCompleter for the command.
      * @param description The description of the command.
      * @param aliases The aliases for the command.
      */
-    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @NotNull String description, @NotNull String... aliases){
+    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @Nullable Double cooldown, @Nullable TabCompleter completer, @NotNull String description, @NotNull String... aliases){
+        if(cooldown == null) cooldown = 0d;
         if(!file.getCommands().containsKey(command)) {
             try {
                 Constructor<PluginCommand> c = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
@@ -120,6 +125,7 @@ public abstract class PluginYAMLManager {
                 PluginCommand cmd = c.newInstance(command, zAPI.getPlugin());
                 cmd.setDescription(description);
                 cmd.setExecutor(ce);
+                if(completer != null) cmd.setTabCompleter(completer);
 
                 List<String> aliasesList = new ArrayList<>();
                 try {
@@ -130,7 +136,7 @@ public abstract class PluginYAMLManager {
 
                 CommandMap commandMap = (CommandMap) f.get(Bukkit.getPluginManager());
                 commandMap.register(zAPI.getPluginName(), cmd);
-                cmds.add(cmd);
+                cmds.put(cmd, cooldown);
 
                 zAPI.getPlugin().getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
                         zAPI.getColoredPluginName()+"&aLoaded command &e/"+command
@@ -144,48 +150,14 @@ public abstract class PluginYAMLManager {
         }
     }
 
-    /**
-     * Registers a command with the specified name, executor, tab completer, description, and aliases.
-     * @param command The name of the command.
-     * @param ce The CommandExecutor for the command.
-     * @param completer The TabCompleter for the command.
-     * @param description The description of the command.
-     * @param aliases The aliases for the command.
-     */
-    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @NotNull TabCompleter completer, @NotNull String description, @NotNull String... aliases){
-        if(!file.getCommands().containsKey(command)) {
-            try {
-                Constructor<PluginCommand> c = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
-                Field f = Bukkit.getPluginManager().getClass().getDeclaredField("commandMap");
-                c.setAccessible(true);
-                f.setAccessible(true);
-
-                PluginCommand cmd = c.newInstance(command, zAPI.getPlugin());
-                cmd.setDescription(description);
-                cmd.setExecutor(ce);
-                cmd.setTabCompleter(completer);
-
-                List<String> aliasesList = new ArrayList<>();
-                try {
-                    aliasesList = new ArrayList<>(Arrays.asList(aliases));
-                }catch (Exception e) {
-                }
-                cmd.setAliases(aliasesList);
-
-                CommandMap commandMap = (CommandMap) f.get(Bukkit.getPluginManager());
-                commandMap.register(zAPI.getPluginName(), cmd);
-                cmds.add(cmd);
-
-                zAPI.getPlugin().getServer().getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
-                        zAPI.getColoredPluginName()+"&aLoaded command &e/"+command
-                ));
-            }catch (Exception e) {
-                e.printStackTrace();
-                zAPI.getPlugin().getLogger().severe(zAPI.getColoredPluginName()+"§4Couldn't load command §e"+command);
-            }
-        }else {
-            zAPI.getPlugin().getLogger().severe(zAPI.getColoredPluginName()+"§4Couldn't load command §e"+command);
-        }
+    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @Nullable TabCompleter completer, @NotNull String description, @NotNull String... aliases){
+        registerCommand(command, ce, null, completer, description, aliases);
+    }
+    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @Nullable Double cooldown, @NotNull String description, @NotNull String... aliases){
+        registerCommand(command, ce, cooldown, null, description, aliases);
+    }
+    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @NotNull String description, @NotNull String... aliases){
+        registerCommand(command, ce, null, null, description, aliases);
     }
 
     /**
@@ -248,6 +220,10 @@ public abstract class PluginYAMLManager {
      */
     public static void registerEvent(@NotNull Listener l) {
         zAPI.getPlugin().getServer().getPluginManager().registerEvents(l, zAPI.getPlugin());
+    }
+
+    public static HashMap<Command, Double> getCmds() {
+        return cmds;
     }
 
 }
