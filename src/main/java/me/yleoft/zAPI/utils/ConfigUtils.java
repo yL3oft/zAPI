@@ -1,5 +1,8 @@
 package me.yleoft.zAPI.utils;
 
+/**
+ * Utility class for configuration-related operations.
+ */
 public abstract class ConfigUtils {
 
     /**

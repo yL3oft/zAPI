@@ -37,6 +37,9 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
+/**
+ * A class for collecting and sending metrics data to bStats.
+ */
 public class Metrics {
 
     private final Plugin plugin;

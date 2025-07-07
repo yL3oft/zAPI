@@ -21,7 +21,7 @@ public abstract class NbtUtils {
      * @param item The item to mark.
      * @param mark The mark to apply to the item.
      */
-    public static void markItem(@NotNull ItemStack item, @NotNull String mark) {
+    public static void markItem(@NotNull ItemStack item, @NotNull final String mark) {
         NBT.modify(item, nbt -> {
             nbt.setBoolean(mark, true);
         });
@@ -32,7 +32,7 @@ public abstract class NbtUtils {
      * @param item The item to unmark.
      * @param mark The mark to remove from the item.
      */
-    public static void unmarkItem(@NotNull ItemStack item, @NotNull String mark) {
+    public static void unmarkItem(@NotNull ItemStack item, @NotNull final String mark) {
         NBT.modify(item, nbt -> {
             nbt.setBoolean(mark, false);
         });
@@ -44,9 +44,9 @@ public abstract class NbtUtils {
      * @param mark The mark to check for.
      * @return True if the item is marked, false otherwise.
      */
-    public static boolean isMarked(@NotNull ItemStack item, @NotNull String mark) {
+    public static boolean isMarked(@NotNull final ItemStack item, @NotNull final String mark) {
         return NBT.get(item, nbt -> {
-            if(!nbt.hasTag(mark)) return false;
+            if (!nbt.hasTag(mark)) return false;
             return nbt.getBoolean(mark);
         });
     }
@@ -56,7 +56,7 @@ public abstract class NbtUtils {
      * @param item The item to add the command to.
      * @param command The command to add.
      */
-    public static void addCustomCommand(@NotNull ItemStack item, @NotNull String command, @Nullable HashMap<String, String> replaces, boolean isConsole) {
+    public static void addCustomCommand(@NotNull ItemStack item, @NotNull final String command, @Nullable final HashMap<String, String> replaces, boolean isConsole) {
         NBT.modify(item, nbt -> {
             String customCommand = command;
             if(replaces != null) {
@@ -64,37 +64,38 @@ public abstract class NbtUtils {
                     customCommand = customCommand.replace(key, replaces.get(key));
                 }
             }
-            if(isConsole) customCommand = "[CON]"+ customCommand;
+            if(isConsole) customCommand = "[CON]" + customCommand;
             if(nbt.hasTag(customCommandNBT)) {
                 if(nbt.getString(customCommandNBT).contains(customCommand)) return;
-                customCommand = nbt.getString(customCommandNBT)+"||"+customCommand;
+                customCommand = nbt.getString(customCommandNBT) + "||" + customCommand;
             }
             nbt.setString(customCommandNBT, customCommand);
         });
     }
-    public static void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands, @Nullable HashMap<String, String> replaces, boolean isConsole) {
+    public static void addCustomCommands(@NotNull ItemStack item, @NotNull final List<String> commands, @Nullable final HashMap<String, String> replaces, boolean isConsole) {
         for(String command : commands) {
             addCustomCommand(item, command, replaces, isConsole);
         }
     }
-    public static void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands, boolean isConsole) {
+    public static void addCustomCommands(@NotNull ItemStack item, @NotNull final List<String> commands, boolean isConsole) {
         for(String command : commands) {
             addCustomCommand(item, command, null, isConsole);
         }
     }
-    public static void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands) {
+    public static void addCustomCommands(@NotNull ItemStack item, @NotNull final List<String> commands) {
         for(String command : commands) {
             addCustomCommand(item, command);
         }
     }
-    public static void addCustomCommands(@NotNull ItemStack item, @NotNull List<String> commands, @Nullable HashMap<String, String> replaces) {
+    public static void addCustomCommands(@NotNull ItemStack item, @NotNull final List<String> commands, @Nullable final HashMap<String, String> replaces) {
         for(String command : commands) {
             addCustomCommand(item, command, replaces);
         }
     }
-    public static void addCustomCommand(@NotNull ItemStack item, @NotNull String command, @Nullable HashMap<String, String> replaces) {
+    public static void addCustomCommand(@NotNull ItemStack item, @NotNull final String command, @Nullable final HashMap<String, String> replaces) {
         addCustomCommand(item, command, replaces, false);
-    }public static void addCustomCommand(@NotNull ItemStack item, @NotNull String command) {
+    }
+    public static void addCustomCommand(@NotNull ItemStack item, @NotNull final String command) {
         addCustomCommand(item, command, null);
     }
 
@@ -103,15 +104,15 @@ public abstract class NbtUtils {
      * @param item The item to remove the command from.
      * @param command The command to remove.
      */
-    public static void removeCustomCommand(@NotNull ItemStack item, @NotNull String command) {
+    public static void removeCustomCommand(@NotNull ItemStack item, @NotNull final String command) {
         NBT.modify(item, nbt -> {
             String customCommand = nbt.getString(customCommandNBT);
             if(customCommand.equals(command)) {
                 nbt.removeKey(customCommandNBT);
             }
             if(customCommand.contains("||") || customCommand.contains(command)) {
-                if(customCommand.contains(command+"||")) customCommand = customCommand.replace(command+"||", "");
-                if(customCommand.contains("||"+command)) customCommand = customCommand.replace("||"+command, "");
+                if(customCommand.contains(command + "||")) customCommand = customCommand.replace(command + "||", "");
+                if(customCommand.contains("||" + command)) customCommand = customCommand.replace("||" + command, "");
                 nbt.setString(customCommandNBT, customCommand);
             }
         });
@@ -122,7 +123,7 @@ public abstract class NbtUtils {
      * @param item The item to get the commands from.
      * @return A list of custom commands.
      */
-    public static List<String> getCustomCommands(@NotNull ItemStack item) {
+    public static List<String> getCustomCommands(@NotNull final ItemStack item) {
         return NBT.get(item, nbt -> {
             List<String> commands = new ArrayList<>();
             if(nbt.hasTag(customCommandNBT)) {

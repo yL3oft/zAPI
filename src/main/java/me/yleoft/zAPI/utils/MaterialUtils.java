@@ -17,7 +17,8 @@ public abstract class MaterialUtils {
      * @param materialString The string to get the material from.
      * @return The Material.
      */
-    public static @NotNull Material getMaterial(@NotNull String materialString) {
+    @NotNull
+    public static Material getMaterial(@NotNull final String materialString) {
         if(StringUtils.startsWithIgnoreCase(materialString, "[head]")) {
             return Material.PLAYER_HEAD;
         }
@@ -38,7 +39,8 @@ public abstract class MaterialUtils {
      * @param name The string to get the material from.
      * @return The Legacy Material.
      */
-    public static @NotNull Material getLegacyMaterial(@NotNull String name) {
+    @NotNull
+    public static Material getLegacyMaterial(@NotNull final String name) {
         try {
             return Material.valueOf(name);
         } catch (IllegalArgumentException e) {
@@ -51,13 +53,28 @@ public abstract class MaterialUtils {
      * @param name The string to check.
      * @return True if the material is a legacy material, false otherwise.
      */
-    public static boolean isLegacyMaterial(@NotNull String name) {
+    public static boolean isLegacyMaterial(@NotNull final String name) {
         try {
             Material.valueOf(name);
             return false;
         } catch (IllegalArgumentException e) {
             return true;
         }
+    }
+
+    /**
+     * Finds a Material from a list of names.
+     * @param names The names to find the material from.
+     * @return The Material.
+     */
+    @NotNull
+    public static Material findMaterial(@NotNull final String... names) {
+        for (String name : names) {
+            try {
+                return Material.valueOf(name.toUpperCase());
+            } catch (IllegalArgumentException ignored) {}
+        }
+        return Material.COBBLESTONE;
     }
 
 }

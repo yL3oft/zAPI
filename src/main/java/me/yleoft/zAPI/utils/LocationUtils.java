@@ -4,10 +4,15 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Utility class for location-related operations.
+ */
 public abstract class LocationUtils {
 
     private static final Set<Material> blacklistedGround = new HashSet<>();
@@ -21,7 +26,11 @@ public abstract class LocationUtils {
         addIfExists("SOUL_FIRE");
     }
 
-    private static void addIfExists(String materialName) {
+    /**
+     * Adds a material to the blacklist if it exists.
+     * @param materialName the name of the material to add
+     */
+    private static void addIfExists(@NotNull final String materialName) {
         try {
             Material mat = Material.valueOf(materialName);
             blacklistedGround.add(mat);
@@ -29,7 +38,15 @@ public abstract class LocationUtils {
         }
     }
 
-    public static Location findNearestSafeLocation(Location origin, int radius, int heightCheckRange) {
+    /**
+     * Finds the nearest safe location from the given origin within a specified radius.
+     * @param origin the starting location
+     * @param radius the search radius
+     * @param heightCheckRange the range to check for height variations
+     * @return a safe location if found, otherwise null
+     */
+    @Nullable
+    public static Location findNearestSafeLocation(@NotNull final Location origin, int radius, int heightCheckRange) {
         if(isSafeLocation(origin)) return origin;
         World world = origin.getWorld();
         if (world == null) return null;
@@ -59,8 +76,12 @@ public abstract class LocationUtils {
         return null;
     }
 
-
-    public static boolean isSafeLocation(Location loc) {
+    /**
+     * Checks if the given location is safe for a player to stand on.
+     * @param loc the location to check
+     * @return true if the location is safe, false otherwise
+     */
+    public static boolean isSafeLocation(@NotNull final Location loc) {
         World world = loc.getWorld();
         if (world == null) return false;
 
@@ -71,11 +92,21 @@ public abstract class LocationUtils {
         return isAirOrNonSolid(feet) && isAirOrNonSolid(head) && isSafeGround(ground);
     }
 
-    private static boolean isAirOrNonSolid(Block block) {
+    /**
+     * Checks if the given block is air or a non-solid block.
+     * @param block the block to check
+     * @return true if the block is air or non-solid, false otherwise
+     */
+    private static boolean isAirOrNonSolid(@NotNull final Block block) {
         return !block.getType().isSolid() && !block.isLiquid();
     }
 
-    private static boolean isSafeGround(Block block) {
+    /**
+     * Checks if the given block is a solid block that is not blacklisted.
+     * @param block the block to check
+     * @return true if the block is solid and not blacklisted, false otherwise
+     */
+    private static boolean isSafeGround(@NotNull final Block block) {
         Material type = block.getType();
         return block.getType().isSolid() && !block.isLiquid() && !blacklistedGround.contains(type);
     }

@@ -8,6 +8,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Handler for PlaceholderAPI integration.
+ * This class is responsible for parsing and applying placeholders to strings for players.
+ */
 public class PlaceholderAPIHandler {
 
     /**

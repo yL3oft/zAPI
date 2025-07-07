@@ -12,8 +12,10 @@ import java.util.*;
 
 import static java.util.Objects.requireNonNull;
 import static me.yleoft.zAPI.utils.ConfigUtils.formPath;
+import static me.yleoft.zAPI.utils.HeadUtils.getPlayerHeadFromString;
 import static me.yleoft.zAPI.utils.MaterialUtils.isLegacyMaterial;
 import static me.yleoft.zAPI.utils.NbtUtils.addCustomCommands;
+import static me.yleoft.zAPI.utils.StringUtils.applyPlaceholders;
 
 public abstract class ItemStackUtils {
 
@@ -45,7 +47,7 @@ public abstract class ItemStackUtils {
      * @param path The path to the item in the config file.
      * @return The created ItemStack.
      */
-    public static @NotNull ItemStack getItemFromConfig(@Nullable Player player, @NotNull YamlConfiguration config, @Nullable String path, @Nullable HashMap<String, String> replacers) {
+    public static @NotNull ItemStack getItemFromConfig(@Nullable final Player player, @NotNull final YamlConfiguration config, @Nullable String path, @Nullable final HashMap<String, String> replacers) {
         if (path == null) path = "";
         String materialPath = formPath(path, "material");
         String amountPath = formPath(path, "amount");
@@ -61,7 +63,13 @@ public abstract class ItemStackUtils {
         }else {
             material = requireNonNull(config.getString(materialPath));
         };
-        if(isLegacyMaterial(material)) {
+        boolean head = false;
+        if(material.startsWith("head-") || material.startsWith("base64head-")) {
+            String[] split = material.split("-");
+            String type = split[0];
+            String value = applyPlaceholders(player, split[1]);
+            item = getPlayerHeadFromString(type, value);
+        }else if(isLegacyMaterial(material)) {
             item = getLegacyItem(material, amount);
         } else item = getItem(material, amount);
         ItemMeta meta = item.getItemMeta();
@@ -97,11 +105,11 @@ public abstract class ItemStackUtils {
         }
         return item;
     }
-    public static @NotNull ItemStack getItemFromConfig(@Nullable Player player, @NotNull YamlConfiguration config, @Nullable String path) {
+    public static @NotNull ItemStack getItemFromConfig(@Nullable final Player player, @NotNull final YamlConfiguration config, @Nullable String path) {
         return getItemFromConfig(player, config, path, null);
     }
 
-    public static @NotNull ItemStack getItem(@NotNull String materialString, int amount) {
+    public static @NotNull ItemStack getItem(@NotNull final String materialString, int amount) {
         Material material = MaterialUtils.getMaterial(materialString);
         return new ItemStack(material, amount);
     }
@@ -111,7 +119,7 @@ public abstract class ItemStackUtils {
      * @param item The {@link ItemStack} to replace the lore and name of
      * @param replaces The {@link HashMap} of replaces to do
      */
-    public static void replaceAll(@NotNull ItemStack item, @NotNull HashMap<String, String> replaces) {
+    public static void replaceAll(@NotNull ItemStack item, @NotNull final HashMap<String, String> replaces) {
         ItemMeta meta = item.getItemMeta();
         if(meta != null) {
             replaceName(meta, replaces);
@@ -126,7 +134,7 @@ public abstract class ItemStackUtils {
      * @param replaces The {@link HashMap} of replaces to do
      * @return The {@link ItemMeta} with the replaced lore
      */
-    public static @NotNull ItemMeta replaceLore(@NotNull ItemMeta meta, @NotNull HashMap<String, String> replaces) {
+    public static @NotNull ItemMeta replaceLore(@NotNull ItemMeta meta, @NotNull final HashMap<String, String> replaces) {
         List<String> lore = meta.getLore();
         if (lore != null) {
             for (int i = 0; i < lore.size(); i++) {
@@ -140,7 +148,7 @@ public abstract class ItemStackUtils {
         }
         return meta;
     }
-    public static ItemStack replaceLore(@NotNull ItemStack item, @NotNull HashMap<String, String> replaces) {
+    public static ItemStack replaceLore(@NotNull ItemStack item, @NotNull final HashMap<String, String> replaces) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             List<String> lore = meta.getLore();
@@ -165,7 +173,7 @@ public abstract class ItemStackUtils {
      * @param replaces The {@link HashMap} of replaces to do
      * @return The {@link ItemMeta} with the replaced name
      */
-    public static @NotNull ItemMeta replaceName(@NotNull ItemMeta meta, @NotNull HashMap<String, String> replaces) {
+    public static @NotNull ItemMeta replaceName(@NotNull ItemMeta meta, @NotNull final HashMap<String, String> replaces) {
         String name = meta.getDisplayName();
         for (String key : replaces.keySet()) {
             name = name.replace(key, replaces.get(key));
@@ -173,7 +181,7 @@ public abstract class ItemStackUtils {
         meta.setDisplayName(name);
         return meta;
     }
-    public static @NotNull ItemStack replaceName(@NotNull ItemStack item, @NotNull HashMap<String, String> replaces) {
+    public static @NotNull ItemStack replaceName(@NotNull ItemStack item, @NotNull final HashMap<String, String> replaces) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             replaceName(meta, replaces);
@@ -205,7 +213,7 @@ public abstract class ItemStackUtils {
             throw new IllegalArgumentException("Invalid material: " + material, e);
         }
     }
-    public static @NotNull ItemStack getLegacyItem(@NotNull String modernName, int amount) {
+    public static @NotNull ItemStack getLegacyItem(@NotNull final String modernName, int amount) {
         Material material = Material.STONE;
         short data = 0;
 

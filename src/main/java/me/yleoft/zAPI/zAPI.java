@@ -1,6 +1,5 @@
 package me.yleoft.zAPI;
 
-import de.tr7zw.changeme.nbtapi.NBT;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.yleoft.zAPI.handlers.PlaceholderAPIHandler;
 import me.yleoft.zAPI.listeners.*;
@@ -11,10 +10,16 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * Main class of zAPI
+ * <p>
+ * This class is used to initialize zAPI and provide access to its features.
+ */
 public class zAPI {
 
     public static String customCommandNBT = "zAPI:customCommand";
     public static PlaceholderAPIHandler placeholderAPIHandler;
+    public static boolean useNBTAPI = false;
 
     protected static JavaPlugin plugin;
     protected static String pluginName;
@@ -33,6 +38,7 @@ public class zAPI {
         zAPI.plugin = plugin;
         zAPI.pluginName = pluginName;
         zAPI.coloredPluginName = coloredPluginName;
+        zAPI.useNBTAPI = useNBTAPI;
         placeholderAPIHandler = new PlaceholderAPIHandler();
         PluginYAMLManager.registerEvent(new PlayerListeners());
         if(useNBTAPI) {
