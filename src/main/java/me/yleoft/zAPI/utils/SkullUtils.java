@@ -31,7 +31,7 @@ import static me.yleoft.zAPI.utils.ProtocolUtils.getProtocolVersion;
  * It provides methods to get the correct head material based on the server version,
  * and to create skull ItemStacks from player names.
  */
-public class SkullUtils {
+public abstract class SkullUtils {
 
     private static final Gson GSON = new Gson();
     protected static final ItemStack originalHead;

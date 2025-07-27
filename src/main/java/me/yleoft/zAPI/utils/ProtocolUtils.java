@@ -11,7 +11,7 @@ import java.lang.reflect.Method;
  * Utility class for retrieving the protocol version of the server.
  * This class provides methods to get the current protocol version and handle legacy versions.
  */
-public class ProtocolUtils {
+public abstract class ProtocolUtils {
 
     /**
      * Retrieves the current protocol version of the server.
@@ -22,11 +22,21 @@ public class ProtocolUtils {
             String packageName = Bukkit.getServer().getClass().getPackage().getName();
             String version = packageName.contains("v") ? packageName.substring(packageName.lastIndexOf('.') + 1) : "";
             Class<?> sharedConstantsClass = getNMSClass("SharedConstants", version);
-            if (sharedConstantsClass == null) return -1;
+            if (sharedConstantsClass == null) {
+                System.out.println("[ProtocolUtils] SharedConstants class not found for version " + version);
+                return -1;
+            }
             Object mcVersion = sharedConstantsClass.getMethod("getCurrentVersion").invoke(null);
-            Method getProtocolMethod = mcVersion.getClass().getMethod("getProtocolVersion");
-            return (int) getProtocolMethod.invoke(mcVersion);
+            Method method = null;
+            try {
+                method = mcVersion.getClass().getMethod("protocolVersion");
+            } catch (NoSuchMethodException e) {
+                method = mcVersion.getClass().getMethod("getProtocolVersion");
+            }
+            return (int) method.invoke(mcVersion);
         } catch (Throwable t) {
+            t.printStackTrace();
+            System.out.println("[ProtocolUtils] Falling back to legacy protocol version.");
             return tryLegacyProtocolVersion();
         }
     }

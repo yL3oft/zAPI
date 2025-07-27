@@ -1,5 +1,6 @@
 package me.yleoft.zAPI.utils;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -9,6 +10,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.StringTokenizer;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Utility class for location-related operations.
@@ -24,6 +28,61 @@ public abstract class LocationUtils {
         addIfExists("MAGMA_BLOCK");
         addIfExists("CAMPFIRE");
         addIfExists("SOUL_FIRE");
+    }
+
+    /**
+     * Serializes a Location object into a string format.
+     * @param location the Location to serialize
+     * @return a string representation of the Location
+     */
+    public static String serialize(@NotNull final Location location) {
+        String world = requireNonNull(location.getWorld()).getName();
+        double x = location.getX();
+        double y = location.getY();
+        double z = location.getZ();
+        float yaw = location.getYaw();
+        float pitch = location.getPitch();
+
+        return serialize(world, x, y, z, yaw, pitch);
+    }
+
+    /**
+     * Serializes the given parameters into a string format.
+     * @param world the name of the world
+     * @param x the x-coordinate
+     * @param y the y-coordinate
+     * @param z the z-coordinate
+     * @param yaw the yaw angle
+     * @param pitch the pitch angle
+     * @return a string representation of the parameters
+     */
+    public static String serialize(@NotNull final String world, final double x, final double y, final double z, final float yaw, final float pitch) {
+        StringBuilder sb = new StringBuilder(80);
+        sb.append(world).append(';')
+                .append(x).append(';')
+                .append(y).append(';')
+                .append(z).append(';')
+                .append(yaw).append(';')
+                .append(pitch);
+        return sb.toString();
+    }
+
+    /**
+     * Deserializes a string into a Location object.
+     * @param serialized the serialized string
+     * @return a Location object representing the serialized data
+     */
+    public static Location deserialize(@NotNull final String serialized) {
+        StringTokenizer tokenizer = new StringTokenizer(serialized, ";");
+
+        World w = Bukkit.getWorld(tokenizer.nextToken());
+        double x = Double.parseDouble(tokenizer.nextToken());
+        double y = Double.parseDouble(tokenizer.nextToken());
+        double z = Double.parseDouble(tokenizer.nextToken());
+        float yaw = Float.parseFloat(tokenizer.nextToken());
+        float pitch = Float.parseFloat(tokenizer.nextToken());
+
+        return new Location(w, x, y, z, yaw, pitch);
     }
 
     /**
@@ -62,7 +121,14 @@ public abstract class LocationUtils {
 
                     for (int yOffset = -heightCheckRange; yOffset <= heightCheckRange; yOffset++) {
                         int y = oy + yOffset;
-                        if (y < world.getMinHeight() || y > world.getMaxHeight()) continue;
+                        int minY = 0;
+                        int maxY = 256;
+                        try {
+                            minY = world.getMinHeight();
+                            maxY = world.getMaxHeight();
+                        }catch (Throwable ignored) {
+                        }
+                        if (y < minY || y > maxY) continue;
 
                         Location check = new Location(world, ox + x, y, oz + z);
                         if (isSafeLocation(check)) {

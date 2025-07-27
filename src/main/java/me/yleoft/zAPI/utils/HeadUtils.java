@@ -13,7 +13,7 @@ import static me.yleoft.zAPI.utils.SkullUtils.originalHead;
  * Utility class for handling player heads.
  * Provides methods to retrieve player heads based on player names, base64 or custom strings.
  */
-public class HeadUtils {
+public abstract class HeadUtils {
 
     private static final Map<String, ItemStack> cacheName = new ConcurrentHashMap<>();
     private static final Map<String, ItemStack> cacheBase64 = new ConcurrentHashMap<>();

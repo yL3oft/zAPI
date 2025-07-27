@@ -132,14 +132,15 @@ public class CustomInventory {
         ItemStack item;
         assert slot != null;
         if (slot.matches("\\d+")) {
-            item = getItemFromConfig(player, config, path);
             HashMap<String, String> hash = new HashMap<>();
             if (replace != null && replacers != null && !replacers.isEmpty()) {
                 hash.put(replace, replacers.get(0));
+                item = getItemFromConfig(player, config, path, hash);
                 setItem(Integer.parseInt(slot), item, hash);
                 return;
             }
             if(addIfEmpty) {
+                item = getItemFromConfig(player, config, path);
                 setItem(Integer.parseInt(slot), item, hash);
             }
         } else if (slot.matches("\\d+-\\d+")) {

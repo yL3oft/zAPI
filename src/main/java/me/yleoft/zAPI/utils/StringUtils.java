@@ -111,4 +111,18 @@ public abstract class StringUtils {
         return result.toString();
     }
 
+    /**
+     * Check if a string is an integer.
+     * @param strNum The string to check
+     * @return true if the string is an integer, false otherwise
+     */
+    public static boolean isInteger(@NotNull String strNum) {
+        try {
+            int d = Integer.parseInt(strNum);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
+    }
+
 }
