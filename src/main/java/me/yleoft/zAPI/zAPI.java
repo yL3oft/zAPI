@@ -105,8 +105,8 @@ public class zAPI {
      *
      * @param pluginId The ID of the plugin on <a href="https://bstats.org/">bStats</a>
      */
-    public static void startMetrics(int pluginId) {
-        Metrics metrics = new Metrics(plugin, pluginId);
+    public static Metrics startMetrics(int pluginId) {
+        return new Metrics(plugin, pluginId);
     }
 
     /**
