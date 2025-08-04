@@ -2,6 +2,7 @@ package me.yleoft.zAPI.listeners;
 
 import me.yleoft.zAPI.utils.InventoryUtils;
 import me.yleoft.zAPI.utils.NbtUtils;
+import me.yleoft.zAPI.utils.SchedulerUtils;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -30,7 +31,7 @@ public class DupeFixerListeners implements Listener {
         }
         Player player = (Player) event.getPlayer();
 
-        zAPI.getPlugin().getServer().getScheduler().runTaskLater(zAPI.getPlugin(), () -> {
+        SchedulerUtils.runTaskLater(player.getLocation(), () -> {
             InventoryUtils.cleanInventory(player, mark);
         }, 3L);
     }
@@ -64,7 +65,7 @@ public class DupeFixerListeners implements Listener {
      */
     @EventHandler
     private void onLogin(@NotNull final PlayerLoginEvent event) {
-        zAPI.getPlugin().getServer().getScheduler().runTaskLater(zAPI.getPlugin(), () -> {
+        SchedulerUtils.runTaskLater(event.getPlayer().getLocation(), () -> {
             InventoryUtils.cleanInventory(event.getPlayer(), mark);
         }, 10L);
     }

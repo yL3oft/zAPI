@@ -26,6 +26,7 @@ public class zAPI {
     protected static String coloredPluginName;
     protected static Object papi;
     protected static Object economy;
+    protected static boolean usingFolia;
 
     /**
      * Initialize zAPI
@@ -36,6 +37,12 @@ public class zAPI {
      */
     public static void init(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName, boolean useNBTAPI) {
         zAPI.plugin = plugin;
+        try {
+            Class.forName("io.papermc.paper.threadedregions.scheduler.RegionScheduler");
+            zAPI.usingFolia = true;
+        } catch (ClassNotFoundException e) {
+            zAPI.usingFolia = false;
+        }
         zAPI.pluginName = pluginName;
         zAPI.coloredPluginName = coloredPluginName;
         zAPI.useNBTAPI = useNBTAPI;
@@ -177,6 +184,14 @@ public class zAPI {
         if(papi != null) {
             ((PlaceholderExpansion)papi).unregister();
         }
+    }
+
+    /**
+     * Returns if the server is running on Folia
+     * @return true if the server is running on Folia, false otherwise
+     */
+    public static boolean isFolia() {
+        return usingFolia;
     }
 
     /**
