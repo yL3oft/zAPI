@@ -96,7 +96,7 @@ public class UpdateManager {
             File newFile = new File(path);
             downloadFile(newFile, ModrinthDownloader.getLatestDownloadUrl(id));
             return path;
-        } catch (Exception e) {}
+        } catch (Exception ignored) {}
         return "ERROR";
     }
 
@@ -119,7 +119,7 @@ public class UpdateManager {
             outputStream.close();
             inputStream.close();
             connection.disconnect();
-        } catch (Exception exception) {}
+        } catch (Exception ignored) {}
     }
 
     /**

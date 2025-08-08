@@ -130,7 +130,7 @@ public abstract class PluginYAMLManager {
                 List<String> aliasesList = new ArrayList<>();
                 try {
                     aliasesList = new ArrayList<>(Arrays.asList(aliases));
-                }catch (Exception e) {
+                }catch (Exception ignored) {
                 }
                 cmd.setAliases(aliasesList);
 
@@ -210,7 +210,7 @@ public abstract class PluginYAMLManager {
     public static void registerTabCompleter(@NotNull String command, @NotNull TabCompleter tc){
         try {
             Objects.requireNonNull(zAPI.getPlugin().getCommand(command)).setTabCompleter(tc);
-        }catch (Exception e) {
+        }catch (Exception ignored) {
         }
     }
 

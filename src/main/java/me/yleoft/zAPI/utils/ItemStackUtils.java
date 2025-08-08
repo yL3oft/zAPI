@@ -62,7 +62,7 @@ public abstract class ItemStackUtils {
             material = materials.get((int) (Math.floor(Math.random() * materials.size())));
         }else {
             material = requireNonNull(config.getString(materialPath));
-        };
+        }
         boolean head = false;
         if(material.startsWith("head-") || material.startsWith("base64head-")) {
             String[] split = material.split("-");
