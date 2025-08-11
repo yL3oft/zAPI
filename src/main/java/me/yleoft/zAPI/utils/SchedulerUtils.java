@@ -100,6 +100,42 @@ public abstract class SchedulerUtils {
     }
 
     /**
+     * Schedules a task to run later asynchronously on the main server thread.
+     * @param loc The location where the task should run, or null for the main thread.
+     * @param task   The task to run.
+     * @param delay  The delay in ticks before the task runs.
+     */
+    public static void runTaskLaterAsynchronously(@Nullable Location loc, @NotNull Runnable task, long delay) {
+        JavaPlugin plugin = zAPI.getPlugin();
+        if (isFolia()) {
+            try {
+                if (loc != null) {
+                    Method getRegionScheduler = plugin.getServer().getClass().getMethod("getRegionScheduler");
+                    RegionScheduler regionScheduler = (RegionScheduler) getRegionScheduler.invoke(plugin.getServer());
+                    regionScheduler.runDelayed(
+                            plugin,
+                            loc,
+                            (ScheduledTask scheduledTask) -> task.run(),
+                            delay
+                    );
+                } else {
+                    Method getGlobalScheduler = plugin.getServer().getClass().getMethod("getGlobalRegionScheduler");
+                    GlobalRegionScheduler globalScheduler = (GlobalRegionScheduler) getGlobalScheduler.invoke(plugin.getServer());
+                    globalScheduler.runDelayed(
+                            plugin,
+                            (ScheduledTask scheduledTask) -> task.run(),
+                            delay
+                    );
+                }
+                return;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, task, delay);
+    }
+
+    /**
      * Schedules a task to run repeatedly on the main server thread asynchronously.
      * @param runnable The FoliaRunnable to run.
      * @param delay  The delay in ticks before the task runs.

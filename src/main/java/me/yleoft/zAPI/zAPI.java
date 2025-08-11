@@ -4,11 +4,20 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.yleoft.zAPI.handlers.PlaceholderAPIHandler;
 import me.yleoft.zAPI.listeners.*;
 import me.yleoft.zAPI.managers.*;
+import me.yleoft.zAPI.utils.FileUtils;
 import net.milkbowl.vault.economy.Economy;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Main class of zAPI
@@ -17,16 +26,30 @@ import org.jetbrains.annotations.NotNull;
  */
 public class zAPI {
 
+    private static YamlConfiguration settings;
+    private static String VERSION;
+    private static int bStatsId;
+
+    static {
+        settings = new YamlConfiguration();
+        try {
+            settings.load(new File("settings.yml"));
+            VERSION = settings.getString("version", "1.0.0");
+            bStatsId = settings.getInt("bstats-id", 26888);
+        } catch (IOException | InvalidConfigurationException e) {
+        }
+    }
+
     public static String customCommandNBT = "zAPI:customCommand";
     public static PlaceholderAPIHandler placeholderAPIHandler;
     public static boolean useNBTAPI = false;
 
-    protected static JavaPlugin plugin;
-    protected static String pluginName;
-    protected static String coloredPluginName;
-    protected static Object papi;
-    protected static Object economy;
-    protected static boolean usingFolia;
+    private static JavaPlugin plugin;
+    private static String pluginName;
+    private static String coloredPluginName;
+    private static Object papi;
+    private static Object economy;
+    private static boolean usingFolia;
 
     /**
      * Initialize zAPI
@@ -53,6 +76,12 @@ public class zAPI {
             PluginYAMLManager.registerEvent(new ItemListeners());
         }
         plugin.getLogger().info("[zAPI] Initialized by " + plugin.getName());
+        try {
+            new zAPIMetrics(plugin, bStatsId);
+            plugin.getLogger().info("[zAPI] Using the plugin '"+pluginName+"' to create a bStats instance!");
+        }catch (Exception ignored) {
+            plugin.getLogger().warning("[zAPI] Failed to create a bStats instance.");
+        }
     }
     public static void init(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName) {
         init(plugin, pluginName, coloredPluginName, false);
@@ -114,6 +143,80 @@ public class zAPI {
      */
     public static Metrics startMetrics(int pluginId) {
         return new Metrics(plugin, pluginId);
+    }
+
+    private static class zAPIMetrics extends Metrics {
+
+        /**
+         * Creates a new Metrics instance.
+         *
+         * @param plugin    Your plugin instance.
+         * @param serviceId The id of the service. It can be found at <a
+         *                  href="https://bstats.org/what-is-my-plugin-id">What is my plugin id?</a>
+         */
+        public zAPIMetrics(JavaPlugin plugin, int serviceId) {
+            super(plugin, serviceId);
+            addCustomChart(new DrilldownPie("player_count", () -> {
+                int players = Bukkit.getOnlinePlayers().size();
+                return buildDistribution(players);
+            }));
+            addCustomChart(new DrilldownPie("parent_plugin", () -> {
+                Map<String, Map<String, Integer>> map = new HashMap<>();
+                Map<String, Integer> entry = new HashMap<>();
+                entry.put(getPlugin().getDescription().getVersion(), 1);
+                map.put(pluginName, entry);
+                return map;
+            }));
+        }
+
+        //<editor-fold desc="Player Count Distribution"
+        private Map<String, Map<String, Integer>> buildDistribution(int players) {
+            Map<String, Map<String, Integer>> outer = new HashMap<>();
+            String outerBucket = outerBucket(players);
+            String innerBucket = innerBucket(players);
+            Map<String, Integer> inner = new HashMap<>();
+            inner.put(innerBucket, 1);
+            outer.put(outerBucket, inner);
+            return outer;
+        }
+
+        private String outerBucket(int n) {
+            if (n <= 0) return "0";
+            if (n <= 10) return "1-10";
+            if (n <= 25) return "11-25";
+            if (n <= 50) return "26-50";
+            if (n <= 100) return "51-100";
+            if (n <= 200) return "101-200";
+            return "200+";
+        }
+
+        private String innerBucket(int n) {
+            if (n <= 0) return "0";
+            if (n <= 10) {
+                return String.valueOf(n);
+            }
+            if (n <= 25) {
+                return rangeOfFive(n, 11, 25);
+            }
+            if (n <= 50) {
+                return rangeOfFive(n, 26, 50);
+            }
+            if (n <= 100) {
+                return rangeOfFive(n, 51, 100);
+            }
+            if (n <= 200) {
+                return rangeOfFive(n, 101, 200);
+            }
+            return "200+";
+        }
+
+        private String rangeOfFive(int n, int start, int end) {
+            int bucketStart = ((n - start) / 5) * 5 + start;
+            int bucketEnd = Math.min(bucketStart + 4, end);
+            return bucketStart + "-" + bucketEnd;
+        }
+        //</editor-fold>
+
     }
 
     /**
