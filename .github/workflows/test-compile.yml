@@ -36,7 +36,7 @@ jobs:
         run: zip -r target.zip target/
 
       - name: Upload target artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: target-artifact
           path: target.zip
