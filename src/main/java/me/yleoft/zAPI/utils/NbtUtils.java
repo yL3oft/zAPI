@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -127,7 +128,7 @@ public abstract class NbtUtils {
         return NBT.get(item, nbt -> {
             List<String> commands = new ArrayList<>();
             if(nbt.hasTag(customCommandNBT)) {
-                commands = List.of(nbt.getString(customCommandNBT).split("\\|\\|"));
+                commands = new ArrayList<>(Arrays.asList(nbt.getString(customCommandNBT).split("\\|\\|")));
             }
             return commands;
         });

@@ -5,7 +5,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
@@ -44,7 +43,6 @@ public class PlayerListeners implements Listener {
                 if(cooldown == 0) return;
                 long cooldownInMills = (long) (cooldown*1000);
                 cacheCooldown.put(player, currentTime+cooldownInMills);
-                return;
             }
         }
     }

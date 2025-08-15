@@ -148,9 +148,8 @@ public abstract class SchedulerUtils {
                 Method getGlobalScheduler = plugin.getServer().getClass().getMethod("getGlobalRegionScheduler");
                 GlobalRegionScheduler globalScheduler = (GlobalRegionScheduler) getGlobalScheduler.invoke(plugin.getServer());
                 class AsyncRepeatingTask {
-                    private ScheduledTask task;
                     void start(long initialDelay) {
-                        task = globalScheduler.runDelayed(plugin, (ScheduledTask t) -> {
+                        ScheduledTask task = globalScheduler.runDelayed(plugin, (ScheduledTask t) -> {
                             runnable.run();
                             start(period);
                         }, initialDelay);

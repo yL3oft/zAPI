@@ -1,7 +1,6 @@
 package me.yleoft.zAPI.utils;
 
 import org.bukkit.Bukkit;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
@@ -21,13 +20,13 @@ public abstract class ProtocolUtils {
         try {
             String packageName = Bukkit.getServer().getClass().getPackage().getName();
             String version = packageName.contains("v") ? packageName.substring(packageName.lastIndexOf('.') + 1) : "";
-            Class<?> sharedConstantsClass = getNMSClass("SharedConstants", version);
+            Class<?> sharedConstantsClass = getNMSClass();
             if (sharedConstantsClass == null) {
                 System.out.println("[ProtocolUtils] SharedConstants class not found for version " + version);
                 return -1;
             }
             Object mcVersion = sharedConstantsClass.getMethod("getCurrentVersion").invoke(null);
-            Method method = null;
+            Method method;
             try {
                 method = mcVersion.getClass().getMethod("protocolVersion");
             } catch (NoSuchMethodException e) {
@@ -48,7 +47,7 @@ public abstract class ProtocolUtils {
      */
     private static int tryLegacyProtocolVersion() {
         try {
-            Class<?> serverClass = getLegacyNMSClass("MinecraftServer");
+            Class<?> serverClass = getLegacyNMSClass();
             Method getServerMethod = serverClass.getMethod("getServer");
             Object server = getServerMethod.invoke(null);
 
@@ -63,13 +62,13 @@ public abstract class ProtocolUtils {
 
     /**
      * Get an NMS class by name.
-     * @param name the name of the class to retrieve.
+     *
      * @return the class
      */
     @Nullable
-    private static Class<?> getNMSClass(@NotNull final String name, String version) {
+    private static Class<?> getNMSClass() {
         try {
-            return Class.forName("net.minecraft." + name);
+            return Class.forName("net.minecraft." + "SharedConstants");
         } catch (ClassNotFoundException e) {
             return null;
         }
@@ -77,17 +76,17 @@ public abstract class ProtocolUtils {
 
     /**
      * Get a legacy NMS class by name.
-     * @param name the name of the class to retrieve.
+     *
      * @return the class
      */
     @Nullable
-    private static Class<?> getLegacyNMSClass(@NotNull String name) {
+    private static Class<?> getLegacyNMSClass() {
         try {
             String packageName = Bukkit.getServer().getClass().getPackage().getName();
             String version = packageName.contains("v") ? packageName.substring(packageName.lastIndexOf('.') + 1) : "";
             String className = version.isEmpty()
-                    ? "net.minecraft.server." + name
-                    : "net.minecraft.server." + version + "." + name;
+                    ? "net.minecraft.server." + "MinecraftServer"
+                    : "net.minecraft.server." + version + "." + "MinecraftServer";
             return Class.forName(className);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();

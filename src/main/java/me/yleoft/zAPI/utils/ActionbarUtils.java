@@ -4,6 +4,7 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
@@ -12,9 +13,16 @@ import java.lang.reflect.Constructor;
  * Utility class for sending action bar messages to players.
  * This class handles different Minecraft versions and uses reflection to send messages.
  */
-public abstract class ActionbarUtils extends ProtocolUtils{
-    private static String version;
+public abstract class ActionbarUtils extends ProtocolUtils {
+
+    private static final String version;
     private static final boolean legacy = getProtocolVersion() <= 47;
+
+    static {
+        String packageName = Bukkit.getServer().getClass().getPackage().getName();
+        String[] parts = packageName.split("\\.");
+        version = parts.length > 3 ? parts[3] : "";
+    }
 
     /**
      * Sends an action bar message to a player.
@@ -22,11 +30,7 @@ public abstract class ActionbarUtils extends ProtocolUtils{
      * @param player  The player to send the message to.
      * @param message The message to send.
      */
-    public static void send(Player player, String message) {
-        String packageName = Bukkit.getServer().getClass().getPackage().getName();
-        String[] parts = packageName.split("\\.");
-        version = parts.length > 3 ? parts[3] : "";
-
+    public static void send(@NotNull Player player, @NotNull String message) {
         if (!legacy) {
             try {
                 player.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(message));

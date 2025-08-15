@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static me.yleoft.zAPI.utils.ConfigUtils.formPath;
@@ -63,7 +64,6 @@ public abstract class ItemStackUtils {
         }else {
             material = requireNonNull(config.getString(materialPath));
         }
-        boolean head = false;
         if(material.startsWith("head-") || material.startsWith("base64head-")) {
             String[] split = material.split("-");
             String type = split[0];
@@ -78,25 +78,20 @@ public abstract class ItemStackUtils {
                 meta.setDisplayName(StringUtils.transform(player, requireNonNull(config.getString(namePath))));
             if (config.contains(lorePath)) {
                 List<String> lore;
-                if (config.isList(lorePath)) {
-                    lore = config.getStringList(lorePath);
-                    List<String> transformedLore = new ArrayList<>();
-                    lore.forEach(loreLine -> transformedLore.add(StringUtils.transform(player, loreLine)));
-                    lore = transformedLore;
-                } else {
-                    lore = List.of(StringUtils.transform(player, requireNonNull(config.getString(lorePath))));
-                }
+                lore = config.isList(lorePath)
+                        ? config.getStringList(lorePath).stream()
+                        .map(loreLine -> StringUtils.transform(player, loreLine))
+                        .collect(Collectors.toList())
+                        : Collections.singletonList(StringUtils.transform(player, requireNonNull(config.getString(lorePath))));
                 meta.setLore(lore);
             }
             item.setItemMeta(meta);
         }
         List<String> commands = new ArrayList<>();
         if (config.contains(commandsPath)) {
-            if (config.isList(commandsPath)) {
-                commands = config.getStringList(commandsPath);
-            } else {
-                commands = List.of(requireNonNull(config.getString(commandsPath)));
-            }
+            commands = config.isList(commandsPath)
+                    ? config.getStringList(commandsPath)
+                    : Collections.singletonList(requireNonNull(config.getString(commandsPath)));
         }
         if (replacers != null && !replacers.isEmpty()) {
             addCustomCommands(item, commands, replacers);
@@ -134,7 +129,7 @@ public abstract class ItemStackUtils {
      * @param replaces The {@link HashMap} of replaces to do
      * @return The {@link ItemMeta} with the replaced lore
      */
-    public static @NotNull ItemMeta replaceLore(@NotNull ItemMeta meta, @NotNull final HashMap<String, String> replaces) {
+    public static ItemMeta replaceLore(@NotNull ItemMeta meta, @NotNull final HashMap<String, String> replaces) {
         List<String> lore = meta.getLore();
         if (lore != null) {
             for (int i = 0; i < lore.size(); i++) {
@@ -148,6 +143,13 @@ public abstract class ItemStackUtils {
         }
         return meta;
     }
+
+    /**
+     * Replaces the lore of the item with the given replaces
+     * @param item The {@link ItemStack} to replace the lore of
+     * @param replaces The {@link HashMap} of replaces to do
+     * @return The {@link ItemMeta} with the replaced lore
+     */
     public static ItemStack replaceLore(@NotNull ItemStack item, @NotNull final HashMap<String, String> replaces) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
@@ -197,7 +199,7 @@ public abstract class ItemStackUtils {
      * @return The created ItemStack.
      */
     public static @NotNull ItemStack getLegacyItem(@NotNull String color, @NotNull String material) {
-        short data = 0;
+        short data;
         color = color.toUpperCase();
         material = material.toUpperCase();
         if (legacyColors.containsKey(color)) {
@@ -218,7 +220,6 @@ public abstract class ItemStackUtils {
         short data = 0;
 
         if (legacyColors.keySet().stream().anyMatch(modernName::startsWith)) {
-            String[] split = modernName.split("_");
             String color = requireNonNull(legacyColors.keySet().stream()
                     .filter(modernName::startsWith)
                     .findFirst()

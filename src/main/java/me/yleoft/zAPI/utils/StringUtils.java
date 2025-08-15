@@ -23,9 +23,7 @@ public abstract class StringUtils {
      * @return true if the full string starts with the prefix, false otherwise
      */
     public static boolean startsWithIgnoreCase(@NotNull final String full, @NotNull final String prefix) {
-        if (full == null || prefix == null) return false;
         if (prefix.length() > full.length()) return false;
-
         return full.substring(0, prefix.length()).equalsIgnoreCase(prefix);
     }
 
@@ -118,7 +116,7 @@ public abstract class StringUtils {
      */
     public static boolean isInteger(@NotNull String strNum) {
         try {
-            int d = Integer.parseInt(strNum);
+            Integer.parseInt(strNum);
         } catch (NumberFormatException nfe) {
             return false;
         }

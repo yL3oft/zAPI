@@ -26,9 +26,9 @@ import java.util.Map.Entry;
 public abstract class PluginYAMLManager {
 
     private static final PluginDescriptionFile file = zAPI.getPlugin().getDescription();
-    private static HashMap<Command, Double> cmds = new HashMap<>();
-    private static List<String> perms = new ArrayList<>();
-    public static HashMap<Player, Long> cacheCooldown = new HashMap<>();
+    private static final HashMap<Command, Double> cmds = new HashMap<>();
+    private static final List<String> perms = new ArrayList<>();
+    public static final HashMap<Player, Long> cacheCooldown = new HashMap<>();
 
     /**
      * CommandExecutor that does nothing and returns false.
@@ -36,11 +36,11 @@ public abstract class PluginYAMLManager {
      */
     public static final TabExecutor emptyExec = new TabExecutor() {
         @Override
-        public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
             return false;
         }
         @Override
-        public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
             return null;
         }
     };
@@ -91,7 +91,7 @@ public abstract class PluginYAMLManager {
                         PluginCommand mappedPCmd = (PluginCommand) mappedCommand;
                         CommandExecutor mappedExec = mappedPCmd.getExecutor();
 
-                        if (mappedExec != null && mappedExec.equals(checkPCmd.getExecutor())) {
+                        if (mappedExec.equals(checkPCmd.getExecutor())) {
                             mappedPCmd.setExecutor(null);
                             mappedPCmd.setTabCompleter(null);
                         }
@@ -102,7 +102,7 @@ public abstract class PluginYAMLManager {
 
             }
             knownCommandsField.setAccessible(false);
-        } catch (Exception exception) {}
+        } catch (Exception ignored) {}
     }
 
     /**
@@ -167,13 +167,12 @@ public abstract class PluginYAMLManager {
         for(String perm : perms) {
             unregisterPermission(perm);
         }
-        Bukkit.getPluginManager().getPermissions().forEach(permission -> {
-            if(permission.getName().startsWith(zAPI.getColoredPluginName().toLowerCase())) {
-                unregisterPermission(permission);
-            }
-        });
     }
 
+    /**
+     * Unregisters a permission with the specified name or Permission object.
+     * @param permission The name of the permission or the Permission object to unregister.
+     */
     public static void unregisterPermission(@NotNull String permission) {
         Bukkit.getPluginManager().removePermission(permission);
     }
@@ -181,25 +180,30 @@ public abstract class PluginYAMLManager {
         Bukkit.getPluginManager().removePermission(permission);
     }
 
+    /**
+     * Registers a permission with the specified name, description, default value, and children.
+     * @param permission The name of the permission.
+     * @param description The description of the permission.
+     * @param def The default value of the permission.
+     * @param children The children permissions.
+     */
+    public static void registerPermission(@NotNull String permission, @Nullable String description, @Nullable PermissionDefault def, @Nullable Map<String, Boolean> children) {
+        if (Bukkit.getPluginManager().getPermission(permission) == null) {
+            Bukkit.getPluginManager().addPermission(new Permission(permission, description, def, children));
+        }
+        if(!perms.contains(permission)) perms.add(permission);
+    }
     public static void registerPermission(@NotNull String permission) {
-        Bukkit.getPluginManager().addPermission(new Permission(permission));
-        perms.add(permission);
+        registerPermission(permission, null, null, null);
     }
-    public static void registerPermission(@NotNull String permission, @NotNull String description) {
-        Bukkit.getPluginManager().addPermission(new Permission(permission, description));
-        perms.add(permission);
+    public static void registerPermission(@NotNull String permission, @Nullable String description) {
+        registerPermission(permission, description, null, null);
     }
-    public static void registerPermission(@NotNull String permission, @NotNull PermissionDefault def) {
-        Bukkit.getPluginManager().addPermission(new Permission(permission, def));
-        perms.add(permission);
+    public static void registerPermission(@NotNull String permission, @Nullable PermissionDefault def) {
+        registerPermission(permission, null, def, null);
     }
-    public static void registerPermission(@NotNull String permission, @NotNull String description, @NotNull PermissionDefault def) {
-        Bukkit.getPluginManager().addPermission(new Permission(permission, description, def));
-        perms.add(permission);
-    }
-    public static void registerPermission(@NotNull String permission, @NotNull String description, @NotNull PermissionDefault def, @NotNull Map<String, Boolean> children) {
-        Bukkit.getPluginManager().addPermission(new Permission(permission, description, def, children));
-        perms.add(permission);
+    public static void registerPermission(@NotNull String permission, @Nullable String description, @Nullable PermissionDefault def) {
+        registerPermission(permission, description, def, null);
     }
 
     /**

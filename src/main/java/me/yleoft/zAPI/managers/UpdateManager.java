@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import me.yleoft.zAPI.utils.ModrinthDownloader;
-import me.yleoft.zAPI.zAPI;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -25,11 +24,11 @@ import java.util.jar.JarFile;
  */
 public class UpdateManager {
 
-    private JavaPlugin plugin;
-    private String url;
-    private String id;
+    private final JavaPlugin plugin;
+    private final String url;
+    private final String id;
 
-    public UpdateManager(JavaPlugin plugin, String url, String modrinthId) {
+    public UpdateManager(@NotNull JavaPlugin plugin, @NotNull String url, @NotNull String modrinthId) {
         this.plugin = plugin;
         this.url = url;
         this.id = modrinthId;
@@ -46,7 +45,7 @@ public class UpdateManager {
             JsonObject item = (JsonObject) json.get(0);
             return item.get("name").toString().replace("\"", "");
         }catch (Exception e) {
-            e.printStackTrace();
+            plugin.getLogger().severe("[zAPI] Failed to retrieve the latest version from " + url);
         }
 
         return plugin.getDescription().getVersion();
@@ -59,13 +58,12 @@ public class UpdateManager {
      * @return The content of the URL as a String.
      * @throws Exception If an error occurs while reading the URL.
      */
-    @NotNull
-    private static String readUrl(String urlString) throws Exception {
+    private static String readUrl(@NotNull String urlString) throws Exception {
         BufferedReader reader = null;
         try {
             URL url = new URL(urlString);
             reader = new BufferedReader(new InputStreamReader(url.openStream()));
-            StringBuffer buffer = new StringBuffer();
+            StringBuilder buffer = new StringBuilder();
             int read;
             char[] chars = new char[1024];
             while ((read = reader.read(chars)) != -1)
@@ -84,7 +82,6 @@ public class UpdateManager {
      *
      * @return The path to the updated plugin JAR file, or "ERROR" if the update fails.
      */
-    @NotNull
     public String update() {
         try {
             File file = locateJarInPlugins(plugin).toFile();
@@ -106,14 +103,14 @@ public class UpdateManager {
      * @param destination The file to save the downloaded content to.
      * @param url         The URL to download the file from.
      */
-    public static void downloadFile(File destination, String url) {
+    public static void downloadFile(@NotNull File destination, @NotNull String url) {
         try {
             HttpURLConnection connection = (HttpURLConnection)(new URL(url)).openConnection();
             connection.connect();
             FileOutputStream outputStream = new FileOutputStream(destination);
             InputStream inputStream = connection.getInputStream();
             byte[] buffer = new byte[1024];
-            int readBytes = 0;
+            int readBytes;
             while ((readBytes = inputStream.read(buffer)) > 0)
                 outputStream.write(buffer, 0, readBytes);
             outputStream.close();
@@ -123,13 +120,13 @@ public class UpdateManager {
     }
 
     /**
-     * Locates the original JAR file of the plugin in the plugins directory.
+     * Locates the original JAR file of the plugin in the plugins' directory.
      * This is useful for updating or reloading the plugin from its original JAR.
      *
      * @param plugin The JavaPlugin instance of the plugin to locate.
      * @return The Path to the original JAR file, or null if not found.
      */
-    public static Path locateJarInPlugins(JavaPlugin plugin) {
+    public static Path locateJarInPlugins(@NotNull JavaPlugin plugin) {
         Path pluginsDir = plugin.getDataFolder().getParentFile().toPath();
         String myMain = plugin.getDescription().getMain();
         String myName = plugin.getDescription().getName();
@@ -154,7 +151,6 @@ public class UpdateManager {
         } catch (Exception e) {
             throw new RuntimeException("Failed to scan plugins directory for the original JAR", e);
         }
-
         return null;
     }
 

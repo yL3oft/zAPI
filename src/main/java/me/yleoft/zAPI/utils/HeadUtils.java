@@ -26,7 +26,6 @@ public abstract class HeadUtils {
      * @param value The value associated with the type (e.g., player name).
      * @return An ItemStack representing the player head, or a default head if the type is unsupported or failed to load.
      */
-    @NotNull
     public static ItemStack getPlayerHeadFromString(@NotNull final String type, @NotNull final String value) {
         switch (type) {
             case "head": {
@@ -46,7 +45,6 @@ public abstract class HeadUtils {
      * @param playerName The name of the player whose head is to be retrieved.
      * @return An ItemStack representing the player's head, or a default head if retrieval fails.
      */
-    @NotNull
     public static ItemStack getPlayerHead(@NotNull final String playerName) {
         try {
             return cacheName.computeIfAbsent(playerName, SkullUtils::getSkullByName).clone();
@@ -63,7 +61,6 @@ public abstract class HeadUtils {
      * @param base64Url The base64 encoded texture URL of the player's head.
      * @return An ItemStack representing the player's head, or a default head if retrieval fails.
      */
-    @NotNull
     public static ItemStack getPlayerHeadB64(@NotNull final String base64Url) {
         try {
             return cacheBase64.computeIfAbsent(base64Url, SkullUtils::getSkullByBase64EncodedTextureUrl).clone();

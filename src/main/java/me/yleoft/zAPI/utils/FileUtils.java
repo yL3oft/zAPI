@@ -18,8 +18,8 @@ import java.util.logging.Level;
 public class FileUtils {
 
     private FileConfiguration newConfig = null;
-    private File configFile = null;
-    private String resource = null;
+    private final File configFile;
+    private final String resource;
 
     /**
      * Creates a new FileUtils instance.

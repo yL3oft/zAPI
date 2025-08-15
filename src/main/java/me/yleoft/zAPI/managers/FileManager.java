@@ -16,9 +16,11 @@ import java.util.List;
 public abstract class FileManager {
 
     private static final List<CustomFile> files = new ArrayList<>();
+    private static final File df = zAPI.getPlugin().getDataFolder();
 
-    public static File df = zAPI.getPlugin().getDataFolder();
-
+    /**
+     * Returns a list of all file utils in the plugin's data folder.
+     */
     public static List<FileUtils> getFiles() {
         List<FileUtils> fus = new ArrayList<>();
         files.forEach(cf -> fus.add(cf.getFu()));

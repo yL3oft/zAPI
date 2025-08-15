@@ -4,7 +4,6 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.yleoft.zAPI.handlers.PlaceholderAPIHandler;
 import me.yleoft.zAPI.listeners.*;
 import me.yleoft.zAPI.managers.*;
-import me.yleoft.zAPI.utils.FileUtils;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
@@ -16,6 +15,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,21 +28,29 @@ import java.util.Map;
  */
 public class zAPI {
 
-    private static YamlConfiguration settings;
     private static String VERSION;
     private static int bStatsId;
 
     static {
-        settings = new YamlConfiguration();
-        try {
-            settings.load(new File("settings.yml"));
-            VERSION = settings.getString("version", "1.0.0");
-            bStatsId = settings.getInt("bstats-id", 26888);
+        YamlConfiguration settings = new YamlConfiguration();
+        String defaultVersion = "1.0.0";
+        int defaultBStatsId = 26888;
+        try (InputStream in = zAPI.class.getClassLoader().getResourceAsStream("settings.yml")) {
+            if (in != null) {
+                settings.load(new InputStreamReader(in, StandardCharsets.UTF_8));
+                VERSION = settings.getString("version", defaultVersion);
+                bStatsId = settings.getInt("bstats-id", defaultBStatsId);
+            } else {
+                VERSION = defaultVersion;
+                bStatsId = defaultBStatsId;
+            }
         } catch (IOException | InvalidConfigurationException e) {
+            VERSION = defaultVersion;
+            bStatsId = defaultBStatsId;
         }
     }
 
-    public static String customCommandNBT = "zAPI:customCommand";
+    public static final String customCommandNBT = "zAPI:customCommand";
     public static PlaceholderAPIHandler placeholderAPIHandler;
     public static boolean useNBTAPI = false;
 
@@ -48,7 +58,6 @@ public class zAPI {
     private static String pluginName;
     private static String coloredPluginName;
     private static Object papi;
-    private static Object economy;
     private static boolean usingFolia;
 
     /**
@@ -156,16 +165,17 @@ public class zAPI {
          */
         public zAPIMetrics(JavaPlugin plugin, int serviceId) {
             super(plugin, serviceId);
-            addCustomChart(new DrilldownPie("player_count", () -> {
-                int players = Bukkit.getOnlinePlayers().size();
-                return buildDistribution(players);
-            }));
+            addCustomChart(new SimplePie("zapi_version", () -> VERSION));
             addCustomChart(new DrilldownPie("parent_plugin", () -> {
                 Map<String, Map<String, Integer>> map = new HashMap<>();
                 Map<String, Integer> entry = new HashMap<>();
                 entry.put(getPlugin().getDescription().getVersion(), 1);
                 map.put(pluginName, entry);
                 return map;
+            }));
+            addCustomChart(new DrilldownPie("player_count", () -> {
+                int players = Bukkit.getOnlinePlayers().size();
+                return buildDistribution(players);
             }));
         }
 
@@ -301,7 +311,7 @@ public class zAPI {
      * Setups the VaultAPI economy
      * @throws RuntimeException if Vault is not present on the server
      */
-    private static void setupEconomy() {
+    public static Economy setupEconomy() {
         if (plugin.getServer().getPluginManager().getPlugin("Vault") == null) {
             throw new RuntimeException("Vault is not present on the server");
         }
@@ -309,7 +319,7 @@ public class zAPI {
         if (rsp == null) {
             throw new RuntimeException("Unable to load Economy class on VaultAPI");
         }
-        economy = rsp.getProvider();
+        return rsp.getProvider();
     }
 
 }

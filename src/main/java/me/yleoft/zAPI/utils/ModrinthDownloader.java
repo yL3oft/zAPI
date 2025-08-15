@@ -84,9 +84,4 @@ public class ModrinthDownloader {
         String sha1;
         String sha512;
     }
-
-    public static void main(String[] args) throws Exception {
-        String url = getLatestDownloadUrl("zhomes");
-        System.out.println("Latest download: " + url);
-    }
 }

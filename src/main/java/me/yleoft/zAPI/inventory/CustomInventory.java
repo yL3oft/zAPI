@@ -31,13 +31,13 @@ public class CustomInventory {
     /**
      * The mark used to identify items in the inventory.
      */
-    public static String mark = "zAPI:customInventory";
-    public static String configPathInventory = "Inventory";
-    public static String configPathItems = "Items";
+    public static final String mark = "zAPI:customInventory";
+    public static final String configPathInventory = "Inventory";
+    public static final String configPathItems = "Items";
 
     private String inventoryName;
     private final int rows;
-    private HashMap<Integer, ItemStack> items = new HashMap<>();
+    private final HashMap<Integer, ItemStack> items = new HashMap<>();
 
     /**
      * Creates a custom inventory with the specified name and number of rows.
@@ -93,10 +93,10 @@ public class CustomInventory {
         items.put(slot, item);
     }
     public void setItem(int slot, @NotNull ItemStack item, @NotNull String command, @Nullable HashMap<String, String> replaces) {
-        setItem(slot, item, List.of(command), replaces);
+        setItem(slot, item, Collections.singletonList(command), replaces);
     }
     public void setItem(int slot, @NotNull ItemStack item, @NotNull String command) {
-        setItem(slot, item, List.of(command), null);
+        setItem(slot, item, Collections.singletonList(command), null);
     }
     public void setItem(int slot, @NotNull ItemStack item, @Nullable HashMap<String, String> replaces) {
         setItem(slot, item, new ArrayList<>(), replaces);

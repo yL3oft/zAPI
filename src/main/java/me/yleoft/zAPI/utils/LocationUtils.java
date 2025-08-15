@@ -11,6 +11,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 import static java.util.Objects.requireNonNull;
 
@@ -57,14 +61,14 @@ public abstract class LocationUtils {
      * @return a string representation of the parameters
      */
     public static String serialize(@NotNull final String world, final double x, final double y, final double z, final float yaw, final float pitch) {
-        StringBuilder sb = new StringBuilder(80);
-        sb.append(world).append(';')
-                .append(x).append(';')
-                .append(y).append(';')
-                .append(z).append(';')
-                .append(yaw).append(';')
-                .append(pitch);
-        return sb.toString();
+        return String.join(";",
+                world,
+                String.valueOf(x),
+                String.valueOf(y),
+                String.valueOf(z),
+                String.valueOf(yaw),
+                String.valueOf(pitch)
+        );
     }
 
     /**
@@ -104,42 +108,53 @@ public abstract class LocationUtils {
      * @param heightCheckRange the range to check for height variations
      * @return a safe location if found, otherwise null
      */
-    @Nullable
-    public static Location findNearestSafeLocation(@NotNull final Location origin, int radius, int heightCheckRange) {
-        if(isSafeLocation(origin)) return origin;
+    public static void findNearestSafeLocationAsync(@NotNull final Location origin, int radius, int heightCheckRange, @NotNull Consumer<Location> callback) {
         World world = origin.getWorld();
-        if (world == null) return null;
+        if (world == null) {
+            SchedulerUtils.runTask(null, () -> callback.accept(null));
+            return;
+        }
 
         int ox = origin.getBlockX();
         int oy = origin.getBlockY();
         int oz = origin.getBlockZ();
 
+        AtomicBoolean called = new AtomicBoolean(false);
+        outer:
         for (int r = 0; r <= radius; r++) {
             for (int x = -r; x <= r; x++) {
                 for (int z = -r; z <= r; z++) {
-                    if (Math.abs(x) != r && Math.abs(z) != r) continue; // spiral pattern edge only
+                    if (Math.abs(x) != r && Math.abs(z) != r) continue;
 
                     for (int yOffset = -heightCheckRange; yOffset <= heightCheckRange; yOffset++) {
                         int y = oy + yOffset;
                         int minY = 0;
                         int maxY = 256;
-                        try {
-                            minY = world.getMinHeight();
-                            maxY = world.getMaxHeight();
-                        }catch (Throwable ignored) {
-                        }
+                        try { minY = world.getMinHeight(); maxY = world.getMaxHeight(); } catch (Throwable ignored) {}
                         if (y < minY || y > maxY) continue;
 
                         Location check = new Location(world, ox + x, y, oz + z);
-                        if (isSafeLocation(check)) {
-                            return check.add(0.5, 0, 0.5); // center
-                        }
+
+                        SchedulerUtils.callSyncMethod(check, () -> {
+                            Block feet = world.getBlockAt(check);
+                            Block head = world.getBlockAt(check.clone().add(0,1,0));
+                            Block ground = world.getBlockAt(check.clone().add(0,-1,0));
+                            return isAirOrNonSolid(feet) && isAirOrNonSolid(head) && isSafeGround(ground);
+                        }).thenAccept(safe -> {
+                            if (safe && called.compareAndSet(false, true)) {
+                                Location finalResult = check.clone().add(0.5, 0, 0.5);
+                                SchedulerUtils.runTask(null, () -> callback.accept(finalResult));
+                            }
+                        });
                     }
                 }
             }
         }
-
-        return null;
+        SchedulerUtils.runTaskLater(null, () -> {
+            if (called.compareAndSet(false, true)) {
+                callback.accept(null);
+            }
+        }, 20L);
     }
 
     /**
@@ -151,11 +166,17 @@ public abstract class LocationUtils {
         World world = loc.getWorld();
         if (world == null) return false;
 
-        Block feet = world.getBlockAt(loc);
-        Block head = world.getBlockAt(loc.clone().add(0, 1, 0));
-        Block ground = world.getBlockAt(loc.clone().add(0, -1, 0));
-
-        return isAirOrNonSolid(feet) && isAirOrNonSolid(head) && isSafeGround(ground);
+        try {
+            return SchedulerUtils.callSyncMethod(loc, () -> {
+                Block feet = world.getBlockAt(loc);
+                Block head = world.getBlockAt(loc.clone().add(0, 1, 0));
+                Block ground = world.getBlockAt(loc.clone().add(0, -1, 0));
+                return isAirOrNonSolid(feet) && isAirOrNonSolid(head) && isSafeGround(ground);
+            }).join();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     /**
