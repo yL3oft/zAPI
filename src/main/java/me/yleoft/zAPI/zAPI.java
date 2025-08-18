@@ -9,11 +9,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,12 +21,15 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import static me.yleoft.zAPI.managers.PluginYAMLManager.unregisterPermissions;
+import static me.yleoft.zAPI.utils.LogUtils.compressLogs;
+
 /**
  * Main class of zAPI
  * <p>
  * This class is used to initialize zAPI and provide access to its features.
  */
-public class zAPI {
+public abstract class zAPI {
 
     private static String VERSION;
     private static int bStatsId;
@@ -94,6 +97,17 @@ public class zAPI {
     }
     public static void init(@NotNull JavaPlugin plugin, @NotNull String pluginName, @NotNull String coloredPluginName) {
         init(plugin, pluginName, coloredPluginName, false);
+    }
+
+    public static void disable() {
+        if(plugin == null) return;
+        if (!isFolia()) {
+            Bukkit.getScheduler().cancelTasks(plugin);
+        }
+        HandlerList.unregisterAll(plugin);
+        unregisterPlaceholderExpansion();
+        unregisterPermissions();
+        compressLogs();
     }
 
     /**

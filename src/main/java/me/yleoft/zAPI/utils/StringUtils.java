@@ -123,4 +123,128 @@ public abstract class StringUtils {
         return true;
     }
 
+    /**
+     * Parse a string as a time in milliseconds.
+     * The string can be in the format "1h", "30m", "15s", etc.
+     * @param time The time string to parse
+     * @return The time in milliseconds, or 0 if the string is empty
+     */
+    public static long parseAsTime(@NotNull String time) {
+        return TimeParser.parseTimeToSeconds(time);
+    }
+
+    /**
+     * Parse milliseconds to time string.
+     * @param time The time in milliseconds to parse
+     * @return The time parsed as time string
+     */
+    public static String parseAsString(long time) {
+        return TimeParser.formatMsToString(time);
+    }
+
+    private static class TimeParser {
+
+        private static final long MS_IN_YEAR = 365L * 24 * 60 * 60 * 1000;
+        private static final long MS_IN_MONTH = 30L * 24 * 60 * 60 * 1000;
+        private static final long MS_IN_WEEK = 7L * 24 * 60 * 60 * 1000;
+        private static final long MS_IN_DAY = 24L * 60 * 60 * 1000;
+        private static final long MS_IN_HOUR = 60L * 60 * 1000;
+        private static final long MS_IN_MINUTE = 60L * 1000;
+
+        private static final Pattern TIME_PATTERN = Pattern.compile(
+                "(\\d+)(y|mo|w|d|h|m|s)", Pattern.CASE_INSENSITIVE
+        );
+
+        public static long parseTimeToSeconds(String timeString) {
+            if (timeString == null || timeString.isEmpty()) {
+                throw new IllegalArgumentException("Time string cannot be null or empty");
+            }
+
+            Matcher matcher = TIME_PATTERN.matcher(timeString);
+            long totalSeconds = 0;
+
+            while (matcher.find()) {
+                long value = Long.parseLong(matcher.group(1));
+                String unit = matcher.group(2).toLowerCase();
+                switch (unit) {
+                    case "y":
+                        totalSeconds += value * MS_IN_YEAR;
+                        break;
+                    case "mo":
+                        totalSeconds += value * MS_IN_MONTH;
+                        break;
+                    case "w":
+                        totalSeconds += value * MS_IN_WEEK;
+                        break;
+                    case "d":
+                        totalSeconds += value * MS_IN_DAY;
+                        break;
+                    case "h":
+                        totalSeconds += value * MS_IN_HOUR;
+                        break;
+                    case "m":
+                        totalSeconds += value * MS_IN_MINUTE;
+                        break;
+                    case "s":
+                        totalSeconds += value;
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unknown time unit: " + unit);
+                }
+            }
+
+            return totalSeconds;
+        }
+
+        public static String formatMsToString(long totalSeconds) {
+            if (totalSeconds <= 0) {
+                return "0s";
+            }
+
+            StringBuilder sb = new StringBuilder();
+
+            long years = totalSeconds / MS_IN_YEAR;
+            if (years > 0) {
+                sb.append(years).append("y");
+                totalSeconds %= MS_IN_YEAR;
+            }
+
+            long months = totalSeconds / MS_IN_MONTH;
+            if (months > 0) {
+                sb.append(months).append("mo");
+                totalSeconds %= MS_IN_MONTH;
+            }
+
+            long weeks = totalSeconds / MS_IN_WEEK;
+            if (weeks > 0) {
+                sb.append(weeks).append("w");
+                totalSeconds %= MS_IN_WEEK;
+            }
+
+            long days = totalSeconds / MS_IN_DAY;
+            if (days > 0) {
+                sb.append(days).append("d");
+                totalSeconds %= MS_IN_DAY;
+            }
+
+            long hours = totalSeconds / MS_IN_HOUR;
+            if (hours > 0) {
+                sb.append(hours).append("h");
+                totalSeconds %= MS_IN_HOUR;
+            }
+
+            long minutes = totalSeconds / MS_IN_MINUTE;
+            if (minutes > 0) {
+                sb.append(minutes).append("m");
+                totalSeconds %= MS_IN_MINUTE;
+            }
+
+            if (totalSeconds > 0) {
+                sb.append(totalSeconds).append("s");
+            }
+
+            return sb.toString();
+        }
+    }
+
 }

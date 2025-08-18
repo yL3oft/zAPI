@@ -1,7 +1,6 @@
 package me.yleoft.zAPI.listeners;
 
 import me.yleoft.zAPI.utils.NbtUtils;
-import me.yleoft.zAPI.zAPI;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 import static me.yleoft.zAPI.inventory.CustomInventory.mark;
+import static me.yleoft.zAPI.utils.PlayerUtils.performCommand;
 
 /**
  * ItemListeners is a listener class for handling item interactions in inventories.
@@ -44,19 +44,6 @@ public class ItemListeners extends NbtUtils implements Listener {
         for(String command : commands) {
             performCommand(player, command);
         }
-    }
-
-    public void performCommand(@NotNull Player player, @NotNull String command) {
-        if(command.startsWith("[CON]")) {
-            command = command.replace("[CON]", "");
-            zAPI.getPlugin().getServer().dispatchCommand(zAPI.getPlugin().getServer().getConsoleSender(), command);
-            return;
-        }else if(command.startsWith("[INV]")) {
-            command = command.replace("[INV]", "");
-            if(command.equalsIgnoreCase("close")) player.closeInventory();
-            return;
-        }
-        player.performCommand(command);
     }
 
 }
