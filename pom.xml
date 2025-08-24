@@ -6,7 +6,7 @@
 
     <groupId>me.yleoft</groupId>
     <artifactId>zAPI</artifactId>
-    <version>1.4.6</version>
+    <version>1.4.7</version>
     <description>API used to manage my plugins</description>
     <url>https://github.com/yL3oft/zAPI</url>
 

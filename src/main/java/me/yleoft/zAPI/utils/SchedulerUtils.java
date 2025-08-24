@@ -7,6 +7,7 @@ import me.yleoft.zAPI.folia.FoliaRunnable;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -96,7 +97,8 @@ public abstract class SchedulerUtils {
             }
             return;
         }
-        runnable.runTaskTimer(plugin, delay, period);
+        BukkitTask task = runnable.runTaskTimer(plugin, delay, period);
+        runnable.setBukkitTask(task);
     }
 
     /**
@@ -162,7 +164,8 @@ public abstract class SchedulerUtils {
             }
             return;
         }
-        runnable.runTaskTimerAsynchronously(plugin, delay, period);
+        BukkitTask task = runnable.runTaskTimerAsynchronously(plugin, delay, period);
+        runnable.setBukkitTask(task);
     }
 
     /**
