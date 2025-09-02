@@ -5,5 +5,6 @@
 ## General Changes
 - Moved api from maven central to [codemc's repo](https://repo.codemc.io/#browse/browse:yl3oft:me%2Fyleoft%2FzAPI)
 - Javadocs are now generated with GitHub workflow
+- Fix java 8 full compatibility
 
 **Full Changelog**: https://github.com/yL3oft/zAPI/compare/1.4.7...1.4.8

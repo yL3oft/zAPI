@@ -16,7 +16,7 @@ public abstract class ConfigUtils {
         try {
             for(String str : strs) {
                 if(str.isEmpty()) continue;
-                if(path.isEmpty()) {
+                if (path.length() == 0) {
                     path = new StringBuilder(str);
                     continue;
                 }
