@@ -49,3 +49,9 @@ jobs:
           files: target/${{ steps.get_jar.outputs.jar }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload target artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zAPI ${{ steps.get_version.outputs.version }}
+          path: target/
