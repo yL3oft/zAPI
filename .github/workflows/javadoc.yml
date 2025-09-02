@@ -34,3 +34,15 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: target/site/apidocs
+
+      - name: Get project version
+        id: get_version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Upload target artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zAPI ${{ steps.get_version.outputs.version }}
+          path: target/
