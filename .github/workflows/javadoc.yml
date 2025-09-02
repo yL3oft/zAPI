@@ -27,7 +27,7 @@ jobs:
           java-version: '8'
 
       - name: Build & generate Javadoc
-        run: mvn javadoc:javadoc
+        run: mvn clean javadoc:javadoc
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
