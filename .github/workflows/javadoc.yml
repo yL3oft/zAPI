@@ -33,4 +33,7 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          external_repository: yL3oft/zPlugins
+          publish_branch: gh-pages
           publish_dir: target/reports/apidocs
+          destination_dir: zapi
