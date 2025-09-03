@@ -29,14 +29,8 @@ jobs:
       - name: Build & generate Javadoc
         run: mvn clean javadoc:javadoc
 
-      - name: Get project version
-        id: get_version
-        run: |
-          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Upload target artifact
-        uses: actions/upload-artifact@v4
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          name: zAPI ${{ steps.get_version.outputs.version }} Javadocs
-          path: target/
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: target/reports/apidocs
