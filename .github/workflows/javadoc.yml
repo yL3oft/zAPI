@@ -32,7 +32,7 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.ACTIONS_DEPLOY_TOKEN }}
           external_repository: yL3oft/zPlugins
           publish_branch: gh-pages
           publish_dir: target/reports/apidocs
