@@ -27,15 +27,7 @@ jobs:
           java-version: '21'
 
       - name: Build & generate Javadoc
-        run: |
-          mkdir -p target/reports/apidocs
-          cp sources/logo.png target/reports/apidocs/logo.png
-
-          mvn clean javadoc:javadoc \
-            -Djavadoc.additionalOptions="\
-              -header '<a href=\"../index.html\" style=\"font-size:14px;padding:6px 10px;background:#0077cc;color:white;border-radius:6px;text-decoration:none;\">⬅ Back to Home</a>\
-              <link rel=\"icon\" type=\"image/png\" href=\"logo.png\">' \
-              -bottom '<link rel=\"icon\" type=\"image/png\" href=\"logo.png\">'"
+        run: mvn clean javadoc:javadoc
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
