@@ -13,6 +13,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -267,12 +268,12 @@ public abstract class zAPI {
      * @param canRegister If the expansion can be registered
      * @param persist If the expansion should persist
      */
-    public static void registerPlaceholderExpansion(@NotNull String author, @NotNull String version, boolean canRegister, boolean persist) {
+    public static void registerPlaceholderExpansion(@Nullable String identifier, @NotNull String author, @NotNull String version, boolean canRegister, boolean persist) {
         if (plugin.getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             papi = new PlaceholderExpansion() {
                 @Override
                 public @NotNull String getIdentifier() {
-                    return plugin.getDescription().getName().toLowerCase();
+                    return identifier == null ? plugin.getDescription().getName().toLowerCase() : identifier;
                 }
 
                 @Override
@@ -302,6 +303,9 @@ public abstract class zAPI {
             };
             ((PlaceholderExpansion)papi).register();
         }
+    }
+    public static void registerPlaceholderExpansion(@NotNull String author, @NotNull String version, boolean canRegister, boolean persist) {
+        registerPlaceholderExpansion(null, author, version, canRegister, persist);
     }
 
     /**
