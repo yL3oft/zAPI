@@ -86,14 +86,26 @@ public abstract class FileManager {
             this.path = path;
         }
 
+        /**
+         * Gets the file.
+         * @return The file.
+         */
         public File getFile() {
             return file;
         }
 
+        /**
+         * Gets the file utils.
+         * @return The file utils.
+         */
         public FileUtils getFu() {
             return fu;
         }
 
+        /**
+         * Gets the path of the file.
+         * @return The path of the file.
+         */
         public String getPath() {
             return path;
         }

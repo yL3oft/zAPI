@@ -42,6 +42,12 @@ public class ModrinthDownloader {
         return version.files.get(0).url;
     }
 
+    /**
+     * Fetches JSON from the specified URL and deserializes it into the specified class.
+     * @param url URL to fetch JSON from
+     * @param clazz class to deserialize JSON into
+     * @return deserialized JSON object
+     */
     private static <T> T getJson(String url, Class<T> clazz) throws IOException {
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setRequestProperty("User-Agent", "YourAppName/1.0 (contact@example.com)");

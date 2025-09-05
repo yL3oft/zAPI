@@ -19,6 +19,10 @@ import static me.yleoft.zAPI.utils.StringUtils.transform;
  */
 public class PlayerListeners implements Listener {
 
+    /**
+     * Listens for player command preprocess events.
+     * For now used to handle command cooldowns.
+     */
     @EventHandler
     public void onPlayerCommandPreprocessEvent(final PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();

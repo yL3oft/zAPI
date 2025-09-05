@@ -6,7 +6,7 @@
 
     <groupId>me.yleoft</groupId>
     <artifactId>zAPI</artifactId>
-    <version>1.4.8</version>
+    <version>1.4.9-SNAPSHOT</version>
     <description>API used to manage my plugins</description>
     <url>https://github.com/yL3oft/zAPI</url>
 
@@ -75,7 +75,11 @@
                 </executions>
                 <configuration>
                     <failOnError>false</failOnError>
+                    <doclint>none</doclint>
                     <encoding>UTF-8</encoding>
+                    <charset>UTF-8</charset>
+                    <windowtitle>${project.name} Javadoc</windowtitle>
+                    <doctitle><![CDATA[<h1>${project.name} ${project.version}</h1>]]></doctitle>
                     <source>1.8</source>
                     <header>
                         <![CDATA[

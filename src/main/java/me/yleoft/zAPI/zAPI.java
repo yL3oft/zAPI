@@ -87,7 +87,7 @@ public abstract class zAPI {
             PluginYAMLManager.registerEvent(new DupeFixerListeners());
             PluginYAMLManager.registerEvent(new ItemListeners());
         }
-        plugin.getLogger().info("[zAPI] Initialized by " + plugin.getName());
+        plugin.getLogger().info("[zAPI] Initialized zAPI v" + VERSION + " using " + plugin.getName() + " v" + plugin.getDescription().getVersion());
         try {
             new zAPIMetrics(plugin, bStatsId);
             plugin.getLogger().info("[zAPI] Using the plugin '"+pluginName+"' to create a bStats instance!");

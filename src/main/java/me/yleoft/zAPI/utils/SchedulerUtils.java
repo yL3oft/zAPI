@@ -213,6 +213,12 @@ public abstract class SchedulerUtils {
         plugin.getServer().getScheduler().runTask(plugin, task);
     }
 
+    /**
+     * Calls a method synchronously on the main server thread at a specific location or globally.
+     * @param loc The location where the task should run, or null for the main thread.
+     * @param task The task to run.
+     * @return A CompletableFuture that will hold the result of the task.
+     */
     public static <T> CompletableFuture<T> callSyncMethod(@Nullable Location loc, @NotNull Callable<T> task) {
         JavaPlugin plugin = zAPI.getPlugin();
         if (isFolia()) {

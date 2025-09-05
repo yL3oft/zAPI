@@ -28,6 +28,12 @@ public class UpdateManager {
     private final String url;
     private final String id;
 
+    /**
+     * Constructor to create a new UpdateManager.
+     * @param plugin The plugin to manage updates for.
+     * @param url The URL to retrieve the latest version from.
+     * @param modrinthId The Modrinth ID of the plugin.
+     */
     public UpdateManager(@NotNull JavaPlugin plugin, @NotNull String url, @NotNull String modrinthId) {
         this.plugin = plugin;
         this.url = url;

@@ -14,7 +14,7 @@ import java.util.List;
  * FileManager class to manage log files.
  * It provides methods to create and manage log files.
  */
-public class LogManager {
+public abstract class LogManager {
 
     private static final List<CustomLog> logFiles = new ArrayList<>();
     private static final File logFolder;
@@ -74,10 +74,17 @@ public class LogManager {
         return getLogUtil(name).getLogFile();
     }
 
+    /**
+     * Returns the log folder.
+     */
     public static File getLogFolder() {
         return logFolder;
     }
 
+    /**
+     * CustomLog class to manage custom log files.
+     * It provides methods to create and manage custom log files.
+     */
     private static class CustomLog {
         private final LogUtils lu;
         private final String name;
@@ -91,14 +98,26 @@ public class LogManager {
             this.name = name;
         }
 
+        /**
+         * Gets the log file.
+         * @return The file.
+         */
         public File getFile() {
             return lu.getLogFile();
         }
 
+        /**
+         * Gets the log utils.
+         * @return The log utils.
+         */
         public LogUtils getLu() {
             return lu;
         }
 
+        /**
+         * Gets the name of the log file.
+         * @return The name of the log file.
+         */
         public String getName() {
             return name;
         }
