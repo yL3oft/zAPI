@@ -1,0 +1,15 @@
+test-cfg: "[en] This is a test config"
+
+test-cfgblock: |
+  [en] This is a test config block
+  It can span multiple lines
+  And preserve formatting
+
+test-cfgvar: "[en] This is a test config with a variable: %test%"
+
+test-only-us: "[en] This is a test message only in the English language file"
+
+commands:
+  testcmd:
+    usage: "[en] /%command%"
+    output: "[en] This is a test command output for /%command%"

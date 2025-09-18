@@ -5,7 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
-import static me.yleoft.zAPI.utils.ItemStackUtils.legacyColors;
+import static me.yleoft.zAPI.utils.ItemStackUtils.LEGACY_COLORS;
 
 /**
  * Utility class for Material related operations.
@@ -23,8 +23,8 @@ public abstract class MaterialUtils {
             return Material.PLAYER_HEAD;
         }
         if(isLegacyMaterial(materialString)) {
-            if (legacyColors.keySet().stream().anyMatch(materialString::startsWith)) {
-                return getLegacyMaterial(legacyColors.keySet().stream()
+            if (LEGACY_COLORS.keySet().stream().anyMatch(materialString::startsWith)) {
+                return getLegacyMaterial(LEGACY_COLORS.keySet().stream()
                         .filter(materialString::startsWith)
                         .findFirst()
                         .map(prefix -> materialString.substring(prefix.length()+1))

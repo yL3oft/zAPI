@@ -130,7 +130,7 @@ public abstract class StringUtils {
      * @return The time in milliseconds, or 0 if the string is empty
      */
     public static long parseAsTime(@NotNull String time) {
-        return TimeParser.parseTimeToSeconds(time);
+        return TimeParser.parseTimeToMilliseconds(time);
     }
 
     /**
@@ -155,92 +155,94 @@ public abstract class StringUtils {
                 "(\\d+)(y|mo|w|d|h|m|s)", Pattern.CASE_INSENSITIVE
         );
 
-        public static long parseTimeToSeconds(String timeString) {
+        public static long parseTimeToMilliseconds(String timeString) {
             if (timeString == null || timeString.isEmpty()) {
                 throw new IllegalArgumentException("Time string cannot be null or empty");
             }
 
             Matcher matcher = TIME_PATTERN.matcher(timeString);
-            long totalSeconds = 0;
+            long totalMs = 0;
 
             while (matcher.find()) {
                 long value = Long.parseLong(matcher.group(1));
                 String unit = matcher.group(2).toLowerCase();
                 switch (unit) {
                     case "y":
-                        totalSeconds += value * MS_IN_YEAR;
+                        totalMs += value * MS_IN_YEAR;
                         break;
                     case "mo":
-                        totalSeconds += value * MS_IN_MONTH;
+                        totalMs += value * MS_IN_MONTH;
                         break;
                     case "w":
-                        totalSeconds += value * MS_IN_WEEK;
+                        totalMs += value * MS_IN_WEEK;
                         break;
                     case "d":
-                        totalSeconds += value * MS_IN_DAY;
+                        totalMs += value * MS_IN_DAY;
                         break;
                     case "h":
-                        totalSeconds += value * MS_IN_HOUR;
+                        totalMs += value * MS_IN_HOUR;
                         break;
                     case "m":
-                        totalSeconds += value * MS_IN_MINUTE;
+                        totalMs += value * MS_IN_MINUTE;
                         break;
                     case "s":
-                        totalSeconds += value;
+                        // seconds -> convert to milliseconds for consistency
+                        totalMs += value * 1000L;
                         break;
                     default:
                         throw new IllegalArgumentException("Unknown time unit: " + unit);
                 }
             }
 
-            return totalSeconds;
+            return totalMs;
         }
 
-        public static String formatMsToString(long totalSeconds) {
-            if (totalSeconds <= 0) {
+        public static String formatMsToString(long totalMs) {
+            if (totalMs <= 0) {
                 return "0s";
             }
 
             StringBuilder sb = new StringBuilder();
 
-            long years = totalSeconds / MS_IN_YEAR;
+            long years = totalMs / MS_IN_YEAR;
             if (years > 0) {
                 sb.append(years).append("y");
-                totalSeconds %= MS_IN_YEAR;
+                totalMs %= MS_IN_YEAR;
             }
 
-            long months = totalSeconds / MS_IN_MONTH;
+            long months = totalMs / MS_IN_MONTH;
             if (months > 0) {
                 sb.append(months).append("mo");
-                totalSeconds %= MS_IN_MONTH;
+                totalMs %= MS_IN_MONTH;
             }
 
-            long weeks = totalSeconds / MS_IN_WEEK;
+            long weeks = totalMs / MS_IN_WEEK;
             if (weeks > 0) {
                 sb.append(weeks).append("w");
-                totalSeconds %= MS_IN_WEEK;
+                totalMs %= MS_IN_WEEK;
             }
 
-            long days = totalSeconds / MS_IN_DAY;
+            long days = totalMs / MS_IN_DAY;
             if (days > 0) {
                 sb.append(days).append("d");
-                totalSeconds %= MS_IN_DAY;
+                totalMs %= MS_IN_DAY;
             }
 
-            long hours = totalSeconds / MS_IN_HOUR;
+            long hours = totalMs / MS_IN_HOUR;
             if (hours > 0) {
                 sb.append(hours).append("h");
-                totalSeconds %= MS_IN_HOUR;
+                totalMs %= MS_IN_HOUR;
             }
 
-            long minutes = totalSeconds / MS_IN_MINUTE;
+            long minutes = totalMs / MS_IN_MINUTE;
             if (minutes > 0) {
                 sb.append(minutes).append("m");
-                totalSeconds %= MS_IN_MINUTE;
+                totalMs %= MS_IN_MINUTE;
             }
 
-            if (totalSeconds > 0) {
-                sb.append(totalSeconds).append("s");
+            long seconds = totalMs / 1000L;
+            if (seconds > 0) {
+                sb.append(seconds).append("s");
             }
 
             return sb.toString();

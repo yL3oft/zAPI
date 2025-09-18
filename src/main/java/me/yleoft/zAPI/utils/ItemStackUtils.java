@@ -20,25 +20,27 @@ import static me.yleoft.zAPI.utils.StringUtils.applyPlaceholders;
 
 public abstract class ItemStackUtils {
 
-    public static final HashMap<String, Integer> legacyColors = new HashMap<>();
+    public static final Map<String, Integer> LEGACY_COLORS;
 
     static {
-        legacyColors.put("WHITE", 0);
-        legacyColors.put("ORANGE", 1);
-        legacyColors.put("MAGENTA", 2);
-        legacyColors.put("LIGHT_BLUE", 3);
-        legacyColors.put("YELLOW", 4);
-        legacyColors.put("LIME", 5);
-        legacyColors.put("PINK", 6);
-        legacyColors.put("GRAY", 7);
-        legacyColors.put("LIGHT_GRAY", 8);
-        legacyColors.put("CYAN", 9);
-        legacyColors.put("PURPLE", 10);
-        legacyColors.put("BLUE", 11);
-        legacyColors.put("BROWN", 12);
-        legacyColors.put("GREEN", 13);
-        legacyColors.put("RED", 14);
-        legacyColors.put("BLACK", 15);
+        Map<String, Integer> _map = new HashMap<>();
+        _map.put("WHITE", 0);
+        _map.put("ORANGE", 1);
+        _map.put("MAGENTA", 2);
+        _map.put("LIGHT_BLUE", 3);
+        _map.put("YELLOW", 4);
+        _map.put("LIME", 5);
+        _map.put("PINK", 6);
+        _map.put("GRAY", 7);
+        _map.put("LIGHT_GRAY", 8);
+        _map.put("CYAN", 9);
+        _map.put("PURPLE", 10);
+        _map.put("BLUE", 11);
+        _map.put("BROWN", 12);
+        _map.put("GREEN", 13);
+        _map.put("RED", 14);
+        _map.put("BLACK", 15);
+        LEGACY_COLORS = Collections.unmodifiableMap(_map);
     }
 
     /**
@@ -202,8 +204,8 @@ public abstract class ItemStackUtils {
         short data;
         color = color.toUpperCase();
         material = material.toUpperCase();
-        if (legacyColors.containsKey(color)) {
-            data = (short) legacyColors.get(color).intValue();
+        if (LEGACY_COLORS.containsKey(color)) {
+            data = (short) LEGACY_COLORS.get(color).intValue();
         } else {
             throw new IllegalArgumentException("Invalid color: " + color);
         }
@@ -219,8 +221,8 @@ public abstract class ItemStackUtils {
         Material material = Material.STONE;
         short data = 0;
 
-        if (legacyColors.keySet().stream().anyMatch(modernName::startsWith)) {
-            String color = requireNonNull(legacyColors.keySet().stream()
+        if (LEGACY_COLORS.keySet().stream().anyMatch(modernName::startsWith)) {
+            String color = requireNonNull(LEGACY_COLORS.keySet().stream()
                     .filter(modernName::startsWith)
                     .findFirst()
                     .orElse(null));

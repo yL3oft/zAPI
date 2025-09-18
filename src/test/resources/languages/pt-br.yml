@@ -1,0 +1,15 @@
+test-cfg: "[pt-br] Esta é uma configuração de teste"
+
+test-cfgblock: |
+  [pt-br] Esta é uma configuração de teste em bloco
+  Pode abranger várias linhas
+  E preservar a formatação
+
+test-cfgvar: "[pt-br] Esta é uma configuração de teste com uma variável: %test%"
+
+test-only-pt-br: "[pt-br] Esta é uma mensagem de teste apenas no arquivo de idioma português do Brasil"
+
+commands:
+  testcmd:
+    usage: "[pt-br] /%command%"
+    output: "[pt-br] Esta é uma saída de comando de teste para /%command%"

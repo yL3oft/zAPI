@@ -133,6 +133,14 @@ public class LanguageManager {
     }
 
     /**
+     * Gets the fallback language code.
+     * @return The fallback language code, or null if not set.
+     */
+    public String getFallbackLanguage() {
+        return fallbackLanguageCode;
+    }
+
+    /**
      * Gets the folder where the language files are located.
      * @return The folder where the language files are located.
      */

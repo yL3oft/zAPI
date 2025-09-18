@@ -173,6 +173,7 @@ public abstract class SkullUtils {
      */
     @Nullable
     public static String decodeSkinUrl(@NotNull final String base64Texture) {
+        if(base64Texture.isEmpty()) return null;
         final String decoded = new String(Base64.getDecoder().decode(base64Texture));
         final JsonObject object = GSON.fromJson(decoded, JsonObject.class);
 
