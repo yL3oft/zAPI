@@ -96,7 +96,7 @@ public class LanguageManager {
         try {
             Class<?> loaderOptionsClass = Class.forName("org.yaml.snakeyaml.LoaderOptions");
             yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
-        }catch (ClassNotFoundException e) {
+        }catch (ClassNotFoundException | NoSuchMethodError e) {
             yaml = new Yaml();
         }
 
