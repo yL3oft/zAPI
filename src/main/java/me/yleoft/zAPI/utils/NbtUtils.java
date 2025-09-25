@@ -22,10 +22,14 @@ public abstract class NbtUtils {
      * @param item The item to mark.
      * @param mark The mark to apply to the item.
      */
-    public static void markItem(@NotNull ItemStack item, @NotNull final String mark) {
+    public static void markItem(@NotNull ItemStack item, @NotNull final String mark, boolean value) {
         NBT.modify(item, nbt -> {
-            nbt.setBoolean(mark, true);
+            nbt.setBoolean(mark, value);
         });
+    }
+
+    public static void markItem(@NotNull ItemStack item, @NotNull final String mark) {
+        markItem(item, mark, true);
     }
 
     /**
@@ -40,6 +44,17 @@ public abstract class NbtUtils {
     }
 
     /**
+     * Removes a specific mark from an item.
+     * @param item The item to remove the mark from.
+     * @param mark The mark to remove.
+     */
+    public static void removeMark(@NotNull ItemStack item, @NotNull final String mark) {
+        NBT.modify(item, nbt -> {
+            nbt.removeKey(mark);
+        });
+    }
+
+    /**
      * Checks if an item is marked with a specific mark.
      * @param item The item to check.
      * @param mark The mark to check for.
@@ -49,6 +64,12 @@ public abstract class NbtUtils {
         return NBT.get(item, nbt -> {
             if (!nbt.hasTag(mark)) return false;
             return nbt.getBoolean(mark);
+        });
+    }
+
+    public static boolean hasMark(@NotNull final ItemStack item, @NotNull final String mark) {
+        return NBT.get(item, nbt -> {
+            return nbt.hasTag(mark);
         });
     }
 

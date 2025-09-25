@@ -36,13 +36,13 @@ public class ItemListeners extends NbtUtils implements Listener {
         }
         ItemStack item = event.getCurrentItem();
 
-        if(isMarked(item, mark)) {
-            event.setCancelled(true);
-        }
+        if(hasMark(item, mark)) {
+            if (isMarked(item, mark)) {
+                event.setCancelled(true);
+            }
 
-        List<String> commands = getCustomCommands(item);
-        for(String command : commands) {
-            performCommand(player, item, command);
+            List<String> commands = getCustomCommands(item);
+            performCommand(player, item, commands);
         }
     }
 

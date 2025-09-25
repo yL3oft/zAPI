@@ -1,5 +1,6 @@
 package me.yleoft.zAPI.utils;
 
+import me.yleoft.zAPI.zAPI;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -25,7 +26,7 @@ public abstract class ItemStackUtils {
     /**
      * The mark used to identify items in the inventory.
      */
-    public static final String mark = "zAPI:unpickable";
+    public static final String mark = "zAPI:"+zAPI.getPluginName()+"-unpickable";
     public static final Map<String, Integer> LEGACY_COLORS;
 
     static {
@@ -116,7 +117,12 @@ public abstract class ItemStackUtils {
             }
             if(config.contains(unbreakablePath) && config.isBoolean(unbreakablePath)) {
                 boolean unbreakable = config.getBoolean(unbreakablePath);
-                meta.setUnbreakable(unbreakable);
+                try {
+                    meta.setUnbreakable(unbreakable);
+                }catch (NoSuchMethodError e) {
+                    // Legacy server
+                    zAPI.getPlugin().getLogger().warning("[zAPI] Your server version does not support unbreakable items (Tried to load menu with unbreakable item).");
+                }
             }
             if(config.contains(itemflagsPath) && (config.isString(namePath) || config.isList(lorePath))) {
                 List<String> itemFlags = config.isList(itemflagsPath)
@@ -136,7 +142,7 @@ public abstract class ItemStackUtils {
             item.setItemMeta(meta);
         }
         boolean pickable = config.contains(pickablePath) && config.isBoolean(pickablePath) && config.getBoolean(pickablePath);
-        if(!pickable) NbtUtils.markItem(item, mark);
+        NbtUtils.markItem(item, mark, !pickable);
         List<String> commands = new ArrayList<>();
         if (config.contains(commandsPath)) {
             commands = config.isList(commandsPath)

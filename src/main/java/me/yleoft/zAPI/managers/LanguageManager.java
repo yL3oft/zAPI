@@ -92,7 +92,13 @@ public class LanguageManager {
     }
 
     private void load() throws IOException {
-        Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
+        Yaml yaml;
+        try {
+            Class<?> loaderOptionsClass = Class.forName("org.yaml.snakeyaml.LoaderOptions");
+            yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
+        }catch (ClassNotFoundException e) {
+            yaml = new Yaml();
+        }
 
         try (FileInputStream inputStream = new FileInputStream(languageFile)) {
             Object data = yaml.load(inputStream);
