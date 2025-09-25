@@ -50,12 +50,6 @@
                                     </excludes>
                                 </filter>
                             </filters>
-                            <relocations>
-                                <relocation>
-                                    <pattern>de.tr7zw.changeme.nbtapi</pattern>
-                                    <shadedPattern>me.yleoft.shaded.nbtapi</shadedPattern>
-                                </relocation>
-                            </relocations>
                         </configuration>
                     </execution>
                 </executions>

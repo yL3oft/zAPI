@@ -5,7 +5,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
-import java.io.IOException;
 
 import static me.yleoft.zAPI.utils.ConfigUtils.formPath;
 import static org.junit.jupiter.api.Assertions.assertEquals;

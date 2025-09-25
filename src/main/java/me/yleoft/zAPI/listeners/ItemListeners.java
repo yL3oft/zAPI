@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-import static me.yleoft.zAPI.inventory.CustomInventory.mark;
+import static me.yleoft.zAPI.utils.ItemStackUtils.mark;
 import static me.yleoft.zAPI.utils.PlayerUtils.performCommand;
 
 /**
@@ -42,7 +42,7 @@ public class ItemListeners extends NbtUtils implements Listener {
 
         List<String> commands = getCustomCommands(item);
         for(String command : commands) {
-            performCommand(player, command);
+            performCommand(player, item, command);
         }
     }
 

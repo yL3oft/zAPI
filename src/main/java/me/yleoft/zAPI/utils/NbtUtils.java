@@ -119,6 +119,12 @@ public abstract class NbtUtils {
         });
     }
 
+    public static void removeCustomCommands(@NotNull ItemStack item) {
+        NBT.modify(item, nbt -> {
+            nbt.removeKey(customCommandNBT);
+        });
+    }
+
     /**
      * Gets the custom commands from an item.
      * @param item The item to get the commands from.

@@ -2,7 +2,9 @@ package me.yleoft.zAPI.utils;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
@@ -20,6 +22,10 @@ import static me.yleoft.zAPI.utils.StringUtils.applyPlaceholders;
 
 public abstract class ItemStackUtils {
 
+    /**
+     * The mark used to identify items in the inventory.
+     */
+    public static final String mark = "zAPI:unpickable";
     public static final Map<String, Integer> LEGACY_COLORS;
 
     static {
@@ -56,6 +62,10 @@ public abstract class ItemStackUtils {
         String amountPath = formPath(path, "amount");
         String namePath = formPath(path, "name");
         String lorePath = formPath(path, "lore");
+        String enchantmentsPath = formPath(path, "enchantments");
+        String unbreakablePath = formPath(path, "unbreakable");
+        String itemflagsPath = formPath(path, "itemflags");
+        String pickablePath = formPath(path, "pickable");
         String commandsPath = formPath(path, "commands");
         int amount = config.contains(amountPath) ? config.getInt(amountPath) : 1;
         ItemStack item;
@@ -76,9 +86,10 @@ public abstract class ItemStackUtils {
         } else item = getItem(material, amount);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
-            if (config.contains(namePath))
+            if (config.contains(namePath) && config.isString(namePath)) {
                 meta.setDisplayName(StringUtils.transform(player, requireNonNull(config.getString(namePath))));
-            if (config.contains(lorePath)) {
+            }
+            if (config.contains(lorePath) && (config.isString(namePath) || config.isList(lorePath))) {
                 List<String> lore;
                 lore = config.isList(lorePath)
                         ? config.getStringList(lorePath).stream()
@@ -87,8 +98,45 @@ public abstract class ItemStackUtils {
                         : Collections.singletonList(StringUtils.transform(player, requireNonNull(config.getString(lorePath))));
                 meta.setLore(lore);
             }
+            if(config.contains(enchantmentsPath) && (config.isString(namePath) || config.isList(lorePath))) {
+                List<String> enchantments = config.isList(enchantmentsPath)
+                        ? config.getStringList(enchantmentsPath)
+                        : Collections.singletonList(requireNonNull(config.getString(enchantmentsPath)));
+                for (String enchantmentString : enchantments) {
+                    enchantmentString = applyPlaceholders(player, enchantmentString);
+                    int level = 1;
+                    if(enchantmentString.contains(";")) {
+                        String[] split = enchantmentString.split(";");
+                        if(split.length == 2 && StringUtils.isInteger(split[1])) level = Integer.parseInt(split[1]) > 1 ? Integer.parseInt(split[1]) : level;
+                        enchantmentString = split[0];
+                    }
+                    Enchantment enchantment = EnchantmentUtils.getEnchantment(enchantmentString);
+                    if(enchantment != null) meta.addEnchant(enchantment, level, true);
+                }
+            }
+            if(config.contains(unbreakablePath) && config.isBoolean(unbreakablePath)) {
+                boolean unbreakable = config.getBoolean(unbreakablePath);
+                meta.setUnbreakable(unbreakable);
+            }
+            if(config.contains(itemflagsPath) && (config.isString(namePath) || config.isList(lorePath))) {
+                List<String> itemFlags = config.isList(itemflagsPath)
+                        ? config.getStringList(itemflagsPath)
+                        : Collections.singletonList(requireNonNull(config.getString(itemflagsPath)));
+                List<ItemFlag> flagsToAdd = new ArrayList<>();
+                for (String flagString : itemFlags) {
+                    if (flagString == null || flagString.trim().isEmpty()) continue;
+                    flagString = applyPlaceholders(player, flagString).trim();
+                    ItemFlag flag = getItemFlagFromString(flagString);
+                    if (flag != null) flagsToAdd.add(flag);
+                }
+                if (!flagsToAdd.isEmpty()) {
+                    meta.addItemFlags(flagsToAdd.toArray(new ItemFlag[0]));
+                }
+            }
             item.setItemMeta(meta);
         }
+        boolean pickable = config.contains(pickablePath) && config.isBoolean(pickablePath) && config.getBoolean(pickablePath);
+        if(!pickable) NbtUtils.markItem(item, mark);
         List<String> commands = new ArrayList<>();
         if (config.contains(commandsPath)) {
             commands = config.isList(commandsPath)
@@ -235,6 +283,45 @@ public abstract class ItemStackUtils {
         ItemStack item = new ItemStack(material, amount);
         item.setDurability(data);
         return item;
+    }
+
+    /**
+     * Tries to get an ItemFlag from a string.
+     * @param raw The raw string to parse.
+     * @return The ItemFlag, or null if not found.
+     */
+    private static @Nullable ItemFlag getItemFlagFromString(@NotNull String raw) {
+        String s = raw.trim();
+        s = s.replace(" ", "_").replace("-", "_");
+        try {
+            return ItemFlag.valueOf(s.toUpperCase());
+        } catch (Exception ignored) {}
+
+        String upper = s.toUpperCase();
+        String withoutHide = upper.startsWith("HIDE_") ? upper.substring(5) : upper;
+        String lower = withoutHide.toLowerCase();
+
+        if (lower.contains("enchant")) {
+            return ItemFlag.HIDE_ENCHANTS;
+        }
+        if (lower.contains("attribut") || lower.contains("attributte") || lower.contains("attributtes") || lower.contains("attributes")) {
+            return ItemFlag.HIDE_ATTRIBUTES;
+        }
+        if (lower.contains("unbreak")) {
+            return ItemFlag.HIDE_UNBREAKABLE;
+        }
+        if (lower.contains("destro")) {
+            return ItemFlag.HIDE_DESTROYS;
+        }
+        if (lower.contains("placed") || lower.contains("placed_on")) {
+            return ItemFlag.HIDE_PLACED_ON;
+        }
+
+        try {
+            return ItemFlag.valueOf("HIDE_" + withoutHide);
+        } catch (Exception ignored) {}
+
+        return null;
     }
 
 }

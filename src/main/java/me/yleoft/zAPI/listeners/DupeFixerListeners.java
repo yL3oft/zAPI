@@ -12,7 +12,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.jetbrains.annotations.NotNull;
 
-import static me.yleoft.zAPI.inventory.CustomInventory.mark;
+import static me.yleoft.zAPI.utils.ItemStackUtils.mark;
 
 /**
  * DupeFixerListeners is a listener class that handles various events related to item duplication.

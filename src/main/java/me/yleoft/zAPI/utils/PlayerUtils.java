@@ -4,6 +4,7 @@ import me.yleoft.zAPI.zAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,6 +15,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static me.yleoft.zAPI.utils.ItemStackUtils.mark;
 import static me.yleoft.zAPI.zAPI.isFolia;
 
 /**
@@ -64,7 +66,7 @@ public abstract class PlayerUtils {
      * @param command       the command to perform
      * @param chanceParsed  whether the command has already been parsed for chance
      */
-    public static void performCommand(@Nullable Player player, @NotNull String command, boolean chanceParsed) {
+    public static void performCommand(@Nullable Player player, @Nullable ItemStack item, @NotNull String command, boolean chanceParsed) {
         if(command.startsWith("[CON]") || (!command.startsWith("[") && player == null)) {
             command = cleanCommand(command.replace("[CON]", ""));
             String finalCommand = command;
@@ -75,6 +77,20 @@ public abstract class PlayerUtils {
             if(player == null) return;
             command = cleanCommand(command.replace("[INV]", ""));
             if(command.equalsIgnoreCase("close")) player.closeInventory();
+            return;
+        }
+        if(command.startsWith("[ITEM]")) {
+            if(player == null || item == null) return;
+            item = item.clone();
+
+            command = cleanCommand(command.replace("[ITEM]", ""));
+            if(command.equalsIgnoreCase("give") && player.getInventory().firstEmpty() != -1) {
+                if(zAPI.useNBTAPI && NbtUtils.isMarked(item, mark)) {
+                    NbtUtils.unmarkItem(item, mark);
+                    NbtUtils.removeCustomCommands(item);
+                }
+                player.getInventory().addItem(item);
+            }
             return;
         }
         if(!chanceParsed && command.startsWith("[")) {
@@ -90,7 +106,7 @@ public abstract class PlayerUtils {
                     return;
                 }
                 command = matcher.replaceFirst("");
-                performCommand(player, cleanCommand(command), true);
+                performCommand(player, item, cleanCommand(command), true);
                 return;
             }
         }
@@ -98,11 +114,17 @@ public abstract class PlayerUtils {
         @NotNull String finalCommand = command;
         SchedulerUtils.runTask(player.getLocation(), () -> player.performCommand(cleanCommand(finalCommand)));
     }
-    public static void performCommand(@Nullable Player player, @NotNull String command) {
-        performCommand(player, command, false);
+    public static void performCommand(@Nullable Player player, @Nullable ItemStack item, @NotNull String command) {
+        performCommand(player, item, command, false);
     }
-    public static void performCommand(@Nullable Player p, @NotNull List<String> commands) {
-        commands.forEach(cmd -> performCommand(p, cmd, false));
+    public static void performCommand(@Nullable Player p, @Nullable ItemStack item, @NotNull List<String> commands) {
+        commands.forEach(cmd -> performCommand(p, item, cmd));
+    }
+    public static void performCommand(@Nullable Player player, @NotNull String command) {
+        performCommand(player, null, command);
+    }
+    public static void performCommand(@Nullable Player player, @NotNull List<String> commands) {
+        performCommand(player, null, commands);
     }
 
     private static String cleanCommand(@Nullable String command) {

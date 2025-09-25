@@ -69,39 +69,168 @@ public abstract class PluginYAMLManager {
             Field f = Bukkit.getPluginManager().getClass().getDeclaredField("commandMap");
             f.setAccessible(true);
             CommandMap commandMap = (CommandMap) f.get(Bukkit.getPluginManager());
+
             Field knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
             knownCommandsField.setAccessible(true);
             Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
-            HashMap<String, Command> commandsToCheck = new HashMap<String, Command>();
+
+            HashMap<String, Command> commandsToCheck = new HashMap<>();
+
+            String pluginNameLower = zAPI.getPluginName() == null ? "" : zAPI.getPluginName().toLowerCase(Locale.ROOT);
 
             for (Command c : cmds.keySet()) {
-                commandsToCheck.put(c.getLabel().toLowerCase(), c);
-                commandsToCheck.put(c.getName().toLowerCase(), c);
-                c.getAliases().forEach(a -> commandsToCheck.put(a.toLowerCase(), c));
+                commandsToCheck.put(c.getLabel().toLowerCase(Locale.ROOT), c);
+                commandsToCheck.put(c.getName().toLowerCase(Locale.ROOT), c);
+                for (String a : c.getAliases()) {
+                    commandsToCheck.put(a.toLowerCase(Locale.ROOT), c);
+                }
+
+                if (!pluginNameLower.isEmpty()) {
+                    commandsToCheck.put(pluginNameLower + ":" + c.getLabel().toLowerCase(Locale.ROOT), c);
+                    commandsToCheck.put(pluginNameLower + ":" + c.getName().toLowerCase(Locale.ROOT), c);
+                    for (String a : c.getAliases()) {
+                        commandsToCheck.put(pluginNameLower + ":" + a.toLowerCase(Locale.ROOT), c);
+                    }
+                }
             }
 
             for (Entry<String, Command> check : commandsToCheck.entrySet()) {
-                Command mappedCommand = knownCommands.get(check.getKey());
-                if (check.getValue().equals(mappedCommand)) {
-                    mappedCommand.unregister(commandMap);
-                    knownCommands.remove(check.getKey());
-                } else if (check.getValue() instanceof PluginCommand) {
-                    PluginCommand checkPCmd = (PluginCommand) check.getValue();
-                    if (mappedCommand instanceof PluginCommand) {
-                        PluginCommand mappedPCmd = (PluginCommand) mappedCommand;
-                        CommandExecutor mappedExec = mappedPCmd.getExecutor();
+                String key = check.getKey();
+                Command registered = knownCommands.get(key);
 
-                        if (mappedExec.equals(checkPCmd.getExecutor())) {
-                            mappedPCmd.setExecutor(null);
-                            mappedPCmd.setTabCompleter(null);
+                if (registered == null) continue;
+
+                boolean isSameCommand = check.getValue().equals(registered);
+
+                boolean isOurPluginCommand = false;
+                if (registered instanceof PluginCommand) {
+                    try {
+                        PluginCommand pCmd = (PluginCommand) registered;
+                        Plugin owning = pCmd.getPlugin();
+                        if (owning != null && owning.equals(zAPI.getPlugin())) {
+                            isOurPluginCommand = true;
                         }
-                    }
-                    checkPCmd.setExecutor(emptyExec);
-                    checkPCmd.setTabCompleter(emptyExec);
+                    } catch (Throwable ignored) {}
                 }
 
+                if (isSameCommand || isOurPluginCommand) {
+                    try {
+                        registered.unregister(commandMap);
+                    } catch (Exception ignored) {}
+                    knownCommands.remove(key);
+                    continue;
+                }
+
+                if (check.getValue() instanceof PluginCommand) {
+                    try {
+                        PluginCommand checkPCmd = (PluginCommand) check.getValue();
+                        if (registered instanceof PluginCommand) {
+                            PluginCommand mappedPCmd = (PluginCommand) registered;
+                            CommandExecutor mappedExec = mappedPCmd.getExecutor();
+
+                            if (mappedExec != null && mappedExec.equals(checkPCmd.getExecutor())) {
+                                mappedPCmd.setExecutor(null);
+                                mappedPCmd.setTabCompleter(null);
+                            }
+                        }
+                        checkPCmd.setExecutor(emptyExec);
+                        checkPCmd.setTabCompleter(emptyExec);
+                    } catch (Exception ignored) {
+                    }
+                }
             }
+
             knownCommandsField.setAccessible(false);
+            f.setAccessible(false);
+
+            cmds.clear();
+        } catch (Exception ignored) {}
+    }
+
+    /**
+     * Unregisters a command with the specified name.
+     * @param command The name of the command to unregister.
+     */
+    public static void unregisterCommand(@NotNull String command) {
+        try {
+            Field f = Bukkit.getPluginManager().getClass().getDeclaredField("commandMap");
+            f.setAccessible(true);
+            CommandMap commandMap = (CommandMap) f.get(Bukkit.getPluginManager());
+
+            Field knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
+            knownCommandsField.setAccessible(true);
+            Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
+
+            String cmdLower = command.toLowerCase(Locale.ROOT);
+            String pluginNameLower = zAPI.getPluginName() == null ? "" : zAPI.getPluginName().toLowerCase(Locale.ROOT);
+
+            List<String> keysToCheck = new ArrayList<>();
+            keysToCheck.add(cmdLower);
+            if (!pluginNameLower.isEmpty()) keysToCheck.add(pluginNameLower + ":" + cmdLower);
+
+            Set<Command> trackedMatching = new HashSet<>();
+            for (Command c : cmds.keySet()) {
+                if (c.getLabel().equalsIgnoreCase(command) || c.getName().equalsIgnoreCase(command)) {
+                    trackedMatching.add(c);
+                    continue;
+                }
+                for (String a : c.getAliases()) {
+                    if (a.equalsIgnoreCase(command)) {
+                        trackedMatching.add(c);
+                        break;
+                    }
+                }
+            }
+
+            for (String key : keysToCheck) {
+                Command mapped = knownCommands.get(key);
+                if (mapped == null) continue;
+
+                boolean isSame = trackedMatching.contains(mapped);
+
+                boolean isOurPluginCommand = false;
+                if (mapped instanceof PluginCommand) {
+                    try {
+                        PluginCommand pCmd = (PluginCommand) mapped;
+                        Plugin owning = pCmd.getPlugin();
+                        if (owning != null && owning.equals(zAPI.getPlugin())) {
+                            isOurPluginCommand = true;
+                        }
+                    } catch (Throwable ignored) {}
+                }
+
+                if (isSame || isOurPluginCommand) {
+                    try {
+                        mapped.unregister(commandMap);
+                    } catch (Exception ignored) {}
+                    knownCommands.remove(key);
+                    continue;
+                }
+
+                for (Command t : trackedMatching) {
+                    if (!(t instanceof PluginCommand)) continue;
+                    try {
+                        PluginCommand checkPCmd = (PluginCommand) t;
+                        if (mapped instanceof PluginCommand) {
+                            PluginCommand mappedPCmd = (PluginCommand) mapped;
+                            CommandExecutor mappedExec = mappedPCmd.getExecutor();
+                            if (mappedExec != null && mappedExec.equals(checkPCmd.getExecutor())) {
+                                mappedPCmd.setExecutor(null);
+                                mappedPCmd.setTabCompleter(null);
+                            }
+                        }
+                        checkPCmd.setExecutor(emptyExec);
+                        checkPCmd.setTabCompleter(emptyExec);
+                    } catch (Exception ignored) {}
+                }
+            }
+
+            for (Command t : trackedMatching) {
+                cmds.remove(t);
+            }
+
+            knownCommandsField.setAccessible(false);
+            f.setAccessible(false);
         } catch (Exception ignored) {}
     }
 
@@ -146,7 +275,7 @@ public abstract class PluginYAMLManager {
                 zAPI.getPlugin().getLogger().severe(zAPI.getColoredPluginName()+"§4Couldn't load command §e"+command);
             }
         }else {
-            zAPI.getPlugin().getLogger().severe(zAPI.getColoredPluginName()+"§4Couldn't load command §e"+command);
+            zAPI.getPlugin().getLogger().severe(zAPI.getColoredPluginName()+"§4Couldn't load command §e"+command+"§4, it is already registered!");
         }
     }
 
@@ -158,6 +287,15 @@ public abstract class PluginYAMLManager {
     }
     public static void registerCommand(@NotNull String command, @NotNull CommandExecutor ce, @NotNull String description, @NotNull String... aliases){
         registerCommand(command, ce, null, null, description, aliases);
+    }
+
+    /**
+     * Checks if a command is registered in the plugin's plugin.yml file.
+     * @param command The name of the command to check.
+     * @return true if the command is registered, false otherwise.
+     */
+    public static boolean isCommandRegistered(@NotNull String command) {
+        return file.getCommands().containsKey(command);
     }
 
     /**

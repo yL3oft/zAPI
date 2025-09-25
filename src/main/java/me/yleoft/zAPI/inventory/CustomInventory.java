@@ -1,11 +1,15 @@
 package me.yleoft.zAPI.inventory;
 
+import me.yleoft.zAPI.managers.PluginYAMLManager;
 import me.yleoft.zAPI.utils.MaterialUtils;
 import me.yleoft.zAPI.utils.NbtUtils;
 import me.yleoft.zAPI.utils.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -28,16 +32,31 @@ import static me.yleoft.zAPI.utils.NbtUtils.addCustomCommands;
  */
 public class CustomInventory {
 
-    /**
-     * The mark used to identify items in the inventory.
-     */
-    public static final String mark = "zAPI:customInventory";
     public static final String configPathInventory = "Inventory";
     public static final String configPathItems = "Items";
 
+    private YamlConfiguration config;
     private String inventoryName;
     private final int rows;
     private final HashMap<Integer, ItemStack> items = new HashMap<>();
+
+    public static void loadMenuCommand(@NotNull YamlConfiguration config) {
+        if(config.contains("command") && config.isString("command")) {
+            String inventoryName = StringUtils.transform(requireNonNull(config.getString(formPath(configPathInventory, "title"))));
+            String command = config.getString("command");
+            if(!PluginYAMLManager.isCommandRegistered(command)) {
+                PluginYAMLManager.registerCommand(command, (sender, cmd, label, args) -> {
+                    if (sender instanceof Player) {
+                        Player p = (Player) sender;
+                        CustomInventory inventory = new CustomInventory(p, config);
+                        p.openInventory(inventory.getInventory());
+                        return false;
+                    }
+                    return false;
+                }, "Opens the custom inventory " + inventoryName);
+            }
+        }
+    }
 
     /**
      * Creates a custom inventory with the specified name and number of rows.
@@ -58,8 +77,9 @@ public class CustomInventory {
      * @param config The YamlConfiguration file to load the inventory from.
      */
     public CustomInventory(@Nullable Player player, @NotNull YamlConfiguration config) {
+        this.config = config;
         this.inventoryName = StringUtils.transform(player, requireNonNull(config.getString(formPath(configPathInventory, "title"))));
-        this.rows = config.getInt(formPath(configPathInventory, "rows"));
+        this.rows = config.getInt(formPath(configPathInventory, "rows"), 3);
 
         for(String itemPath : config.getConfigurationSection(configPathItems).getKeys(false)) {
             String materialPath = formPath(configPathItems, itemPath, "material");
@@ -239,7 +259,6 @@ public class CustomInventory {
                 itemsArray[i] = null;
                 continue;
             }
-            NbtUtils.markItem(item, mark);
             itemsArray[i] = item;
         }
         return itemsArray;
