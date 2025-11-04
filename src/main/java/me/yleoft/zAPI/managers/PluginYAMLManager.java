@@ -18,6 +18,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * PluginYAMLManager class to manage commands and permissions for a Bukkit plugin.
@@ -26,9 +27,9 @@ import java.util.Map.Entry;
 public abstract class PluginYAMLManager {
 
     private static final PluginDescriptionFile file = zAPI.getPlugin().getDescription();
-    private static final HashMap<Command, Double> cmds = new HashMap<>();
+    private static final Map<Command, Double> cmds = new HashMap<>();
     private static final List<String> perms = new ArrayList<>();
-    public static final HashMap<Player, Long> cacheCooldown = new HashMap<>();
+    public static final Map<Player, Long> cacheCooldown = new HashMap<>();
 
     /**
      * CommandExecutor that does nothing and returns false.
@@ -74,7 +75,7 @@ public abstract class PluginYAMLManager {
             knownCommandsField.setAccessible(true);
             Map<String, Command> knownCommands = (Map<String, Command>) knownCommandsField.get(commandMap);
 
-            HashMap<String, Command> commandsToCheck = new HashMap<>();
+            Map<String, Command> commandsToCheck = new HashMap<>();
 
             String pluginNameLower = zAPI.getPluginName() == null ? "" : zAPI.getPluginName().toLowerCase(Locale.ROOT);
 
@@ -364,7 +365,7 @@ public abstract class PluginYAMLManager {
         zAPI.getPlugin().getServer().getPluginManager().registerEvents(l, zAPI.getPlugin());
     }
 
-    public static HashMap<Command, Double> getCmds() {
+    public static Map<Command, Double> getCmds() {
         return cmds;
     }
 

@@ -57,7 +57,7 @@ public abstract class ItemStackUtils {
      * @param path The path to the item in the config file.
      * @return The created ItemStack.
      */
-    public static @NotNull ItemStack getItemFromConfig(@Nullable final Player player, @NotNull final YamlConfiguration config, @Nullable String path, @Nullable final HashMap<String, String> replacers) {
+    public static @NotNull ItemStack getItemFromConfig(@Nullable final Player player, @NotNull final YamlConfiguration config, @Nullable String path, @Nullable final Map<String, String> replacers) {
         if (path == null) path = "";
         String materialPath = formPath(path, "material");
         String amountPath = formPath(path, "amount");
@@ -168,9 +168,9 @@ public abstract class ItemStackUtils {
     /**
      * Replaces all the lore and name of the item with the given replaces
      * @param item The {@link ItemStack} to replace the lore and name of
-     * @param replaces The {@link HashMap} of replaces to do
+     * @param replaces The {@link Map} of replaces to do
      */
-    public static void replaceAll(@NotNull ItemStack item, @NotNull final HashMap<String, String> replaces) {
+    public static void replaceAll(@NotNull ItemStack item, @NotNull final Map<String, String> replaces) {
         ItemMeta meta = item.getItemMeta();
         if(meta != null) {
             replaceName(meta, replaces);
@@ -182,10 +182,10 @@ public abstract class ItemStackUtils {
     /**
      * Replaces the lore of the item with the given replaces
      * @param meta The {@link ItemMeta} to replace the lore of
-     * @param replaces The {@link HashMap} of replaces to do
+     * @param replaces The {@link Map} of replaces to do
      * @return The {@link ItemMeta} with the replaced lore
      */
-    public static ItemMeta replaceLore(@NotNull ItemMeta meta, @NotNull final HashMap<String, String> replaces) {
+    public static ItemMeta replaceLore(@NotNull ItemMeta meta, @NotNull final Map<String, String> replaces) {
         List<String> lore = meta.getLore();
         if (lore != null) {
             for (int i = 0; i < lore.size(); i++) {
@@ -203,10 +203,10 @@ public abstract class ItemStackUtils {
     /**
      * Replaces the lore of the item with the given replaces
      * @param item The {@link ItemStack} to replace the lore of
-     * @param replaces The {@link HashMap} of replaces to do
+     * @param replaces The {@link Map} of replaces to do
      * @return The {@link ItemMeta} with the replaced lore
      */
-    public static ItemStack replaceLore(@NotNull ItemStack item, @NotNull final HashMap<String, String> replaces) {
+    public static ItemStack replaceLore(@NotNull ItemStack item, @NotNull final Map<String, String> replaces) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             List<String> lore = meta.getLore();
@@ -228,10 +228,10 @@ public abstract class ItemStackUtils {
     /**
      * Replaces the name of the item with the given replaces
      * @param meta The {@link ItemMeta} to replace the name of
-     * @param replaces The {@link HashMap} of replaces to do
+     * @param replaces The {@link Map} of replaces to do
      * @return The {@link ItemMeta} with the replaced name
      */
-    public static @NotNull ItemMeta replaceName(@NotNull ItemMeta meta, @NotNull final HashMap<String, String> replaces) {
+    public static @NotNull ItemMeta replaceName(@NotNull ItemMeta meta, @NotNull final Map<String, String> replaces) {
         String name = meta.getDisplayName();
         for (String key : replaces.keySet()) {
             name = name.replace(key, replaces.get(key));
@@ -239,7 +239,7 @@ public abstract class ItemStackUtils {
         meta.setDisplayName(name);
         return meta;
     }
-    public static @NotNull ItemStack replaceName(@NotNull ItemStack item, @NotNull final HashMap<String, String> replaces) {
+    public static @NotNull ItemStack replaceName(@NotNull ItemStack item, @NotNull final Map<String, String> replaces) {
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             replaceName(meta, replaces);

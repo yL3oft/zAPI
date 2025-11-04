@@ -2,14 +2,10 @@ package me.yleoft.zAPI.inventory;
 
 import me.yleoft.zAPI.managers.PluginYAMLManager;
 import me.yleoft.zAPI.utils.MaterialUtils;
-import me.yleoft.zAPI.utils.NbtUtils;
 import me.yleoft.zAPI.utils.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -38,7 +34,7 @@ public class CustomInventory {
     private YamlConfiguration config;
     private String inventoryName;
     private final int rows;
-    private final HashMap<Integer, ItemStack> items = new HashMap<>();
+    private final Map<Integer, ItemStack> items = new HashMap<>();
 
     public static void loadMenuCommand(@NotNull YamlConfiguration config) {
         if(config.contains("command") && config.isString("command")) {
@@ -100,7 +96,7 @@ public class CustomInventory {
      * @param item The item to add.
      * @throws IllegalArgumentException if the slot is out of bounds.
      */
-    public void setItem(int slot, @NotNull ItemStack item, @NotNull List<String> commands, @Nullable HashMap<String, String> replaces) {
+    public void setItem(int slot, @NotNull ItemStack item, @NotNull List<String> commands, @Nullable Map<String, String> replaces) {
         if (slot < 0 || slot >= rows*9) {
             throw new IllegalArgumentException("Slot must be between 0 and " + (rows*9 - 1));
         }
@@ -112,19 +108,19 @@ public class CustomInventory {
         }
         items.put(slot, item);
     }
-    public void setItem(int slot, @NotNull ItemStack item, @NotNull String command, @Nullable HashMap<String, String> replaces) {
+    public void setItem(int slot, @NotNull ItemStack item, @NotNull String command, @Nullable Map<String, String> replaces) {
         setItem(slot, item, Collections.singletonList(command), replaces);
     }
     public void setItem(int slot, @NotNull ItemStack item, @NotNull String command) {
         setItem(slot, item, Collections.singletonList(command), null);
     }
-    public void setItem(int slot, @NotNull ItemStack item, @Nullable HashMap<String, String> replaces) {
+    public void setItem(int slot, @NotNull ItemStack item, @Nullable Map<String, String> replaces) {
         setItem(slot, item, new ArrayList<>(), replaces);
     }
     public void setItem(int slot, @NotNull ItemStack item) {
         setItem(slot, item, new ArrayList<>(), null);
     }
-    public void setItem(@Nullable YamlConfiguration config, @Nullable String materialPath, @NotNull String slot, @NotNull ItemStack item, @Nullable HashMap<String, String> replaces) {
+    public void setItem(@Nullable YamlConfiguration config, @Nullable String materialPath, @NotNull String slot, @NotNull ItemStack item, @Nullable Map<String, String> replaces) {
         if (slot.matches("\\d+")) {
             setItem(Integer.parseInt(slot), item, replaces);
         } else if (slot.matches("\\d+-\\d+")) {
@@ -152,7 +148,7 @@ public class CustomInventory {
         ItemStack item;
         assert slot != null;
         if (slot.matches("\\d+")) {
-            HashMap<String, String> hash = new HashMap<>();
+            Map<String, String> hash = new HashMap<>();
             if (replace != null && replacers != null && !replacers.isEmpty()) {
                 hash.put(replace, replacers.get(0));
                 item = getItemFromConfig(player, config, path, hash);
@@ -171,7 +167,7 @@ public class CustomInventory {
                 List<Material> materials = new ArrayList<>();
                 config.getStringList(materialPath).forEach(m -> materials.add(MaterialUtils.getMaterial(m)));
                 for (int i = start; i <= end; i++) {
-                    HashMap<String, String> hash = new HashMap<>();
+                    Map<String, String> hash = new HashMap<>();
                     if (replace != null && replacers != null && !replacers.isEmpty()) {
                         hash.put(replace, replacers.get(0));
                         item = getItemFromConfig(player, config, path, hash);
@@ -188,7 +184,7 @@ public class CustomInventory {
                 }
             }else {
                 for (int i = start; i <= end; i++) {
-                    HashMap<String, String> hash = new HashMap<>();
+                    Map<String, String> hash = new HashMap<>();
                     if (replace != null && replacers != null && !replacers.isEmpty()) {
                         hash.put(replace, replacers.get(0));
                         item = getItemFromConfig(player, config, path, hash);
@@ -248,7 +244,7 @@ public class CustomInventory {
     }
 
     /**
-     * Transforms the items HashMap into an array of ItemStacks.
+     * Transforms the items Map into an array of ItemStacks.
      * @return The array of ItemStacks.
      */
     private ItemStack[] getItemsArray() {

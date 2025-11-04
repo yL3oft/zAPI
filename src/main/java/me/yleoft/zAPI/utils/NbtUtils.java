@@ -7,8 +7,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static me.yleoft.zAPI.zAPI.customCommandNBT;
 
@@ -78,7 +78,7 @@ public abstract class NbtUtils {
      * @param item The item to add the command to.
      * @param command The command to add.
      */
-    public static void addCustomCommand(@NotNull ItemStack item, @NotNull final String command, @Nullable final HashMap<String, String> replaces, boolean isConsole) {
+    public static void addCustomCommand(@NotNull ItemStack item, @NotNull final String command, @Nullable final Map<String, String> replaces, boolean isConsole) {
         NBT.modify(item, nbt -> {
             String customCommand = command;
             if(replaces != null) {
@@ -94,7 +94,7 @@ public abstract class NbtUtils {
             nbt.setString(customCommandNBT, customCommand);
         });
     }
-    public static void addCustomCommands(@NotNull ItemStack item, @NotNull final List<String> commands, @Nullable final HashMap<String, String> replaces, boolean isConsole) {
+    public static void addCustomCommands(@NotNull ItemStack item, @NotNull final List<String> commands, @Nullable final Map<String, String> replaces, boolean isConsole) {
         for(String command : commands) {
             addCustomCommand(item, command, replaces, isConsole);
         }
@@ -109,12 +109,12 @@ public abstract class NbtUtils {
             addCustomCommand(item, command);
         }
     }
-    public static void addCustomCommands(@NotNull ItemStack item, @NotNull final List<String> commands, @Nullable final HashMap<String, String> replaces) {
+    public static void addCustomCommands(@NotNull ItemStack item, @NotNull final List<String> commands, @Nullable final Map<String, String> replaces) {
         for(String command : commands) {
             addCustomCommand(item, command, replaces);
         }
     }
-    public static void addCustomCommand(@NotNull ItemStack item, @NotNull final String command, @Nullable final HashMap<String, String> replaces) {
+    public static void addCustomCommand(@NotNull ItemStack item, @NotNull final String command, @Nullable final Map<String, String> replaces) {
         addCustomCommand(item, command, replaces, false);
     }
     public static void addCustomCommand(@NotNull ItemStack item, @NotNull final String command) {
