@@ -1,8 +1,11 @@
 ## Dependency Changes
-- Plugin now uses [NBTAPI 2.15.3](https://github.com/tr7zw/Item-NBT-API/releases/tag/2.15.3)
+- Plugin now uses Spigot-API 1.21.10-R0.1-SNAPSHOT
 
 ## General Changes
-- Added support for 1.21.9 & 1.21.10
-- Optimized performance for faster response times.
+- Fix menu loading related bugs
+- Fix action bar for 1.12 or lower servers
+- Fix protocol version detection & checks
+- Fix heads not loading in menus in older versions
+- Heads can now be loaded by texture URLs in menus
 
-**Full Changelog**: https://github.com/yL3oft/zAPI/compare/1.4.9...1.5.0
+**Full Changelog**: https://github.com/yL3oft/zAPI/compare/1.5.0...1.5.1

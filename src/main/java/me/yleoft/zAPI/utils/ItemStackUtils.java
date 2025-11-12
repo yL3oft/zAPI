@@ -77,7 +77,7 @@ public abstract class ItemStackUtils {
         }else {
             material = requireNonNull(config.getString(materialPath));
         }
-        if(material.startsWith("head-") || material.startsWith("base64head-")) {
+        if(material.startsWith("head-") || material.startsWith("base64head-") || material.startsWith("namehead-") || material.startsWith("urlhead-")) {
             String[] split = material.split("-");
             String type = split[0];
             String value = applyPlaceholders(player, split[1]);
@@ -90,7 +90,7 @@ public abstract class ItemStackUtils {
             if (config.contains(namePath) && config.isString(namePath)) {
                 meta.setDisplayName(StringUtils.transform(player, requireNonNull(config.getString(namePath))));
             }
-            if (config.contains(lorePath) && (config.isString(namePath) || config.isList(lorePath))) {
+            if (config.contains(lorePath) && (config.isString(lorePath) || config.isList(lorePath))) {
                 List<String> lore;
                 lore = config.isList(lorePath)
                         ? config.getStringList(lorePath).stream()
@@ -99,7 +99,7 @@ public abstract class ItemStackUtils {
                         : Collections.singletonList(StringUtils.transform(player, requireNonNull(config.getString(lorePath))));
                 meta.setLore(lore);
             }
-            if(config.contains(enchantmentsPath) && (config.isString(namePath) || config.isList(lorePath))) {
+            if(config.contains(enchantmentsPath) && (config.isString(enchantmentsPath) || config.isList(enchantmentsPath))) {
                 List<String> enchantments = config.isList(enchantmentsPath)
                         ? config.getStringList(enchantmentsPath)
                         : Collections.singletonList(requireNonNull(config.getString(enchantmentsPath)));
@@ -124,7 +124,7 @@ public abstract class ItemStackUtils {
                     zAPI.getPlugin().getLogger().warning("[zAPI] Your server version does not support unbreakable items (Tried to load menu with unbreakable item).");
                 }
             }
-            if(config.contains(itemflagsPath) && (config.isString(namePath) || config.isList(lorePath))) {
+            if(config.contains(itemflagsPath) && (config.isString(itemflagsPath) || config.isList(itemflagsPath))) {
                 List<String> itemFlags = config.isList(itemflagsPath)
                         ? config.getStringList(itemflagsPath)
                         : Collections.singletonList(requireNonNull(config.getString(itemflagsPath)));

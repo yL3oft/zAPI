@@ -16,7 +16,7 @@ import java.lang.reflect.Constructor;
 public abstract class ActionbarUtils extends ProtocolUtils {
 
     private static final String version;
-    private static final boolean legacy = getProtocolVersion() <= 47;
+    private static final boolean legacy = CURRENT_VERSION <= v1_12;
 
     static {
         String packageName = Bukkit.getServer().getClass().getPackage().getName();

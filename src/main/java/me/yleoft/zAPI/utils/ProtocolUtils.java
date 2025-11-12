@@ -1,10 +1,10 @@
 package me.yleoft.zAPI.utils;
 
+import com.google.common.primitives.Ints;
 import org.bukkit.Bukkit;
-import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for retrieving the protocol version of the server.
@@ -12,86 +12,41 @@ import java.lang.reflect.Method;
  */
 public abstract class ProtocolUtils {
 
+    public static final int CURRENT_VERSION = getProtocolVersion();
+
+    public static final int v1_21 = 1210;
+    public static final int v1_20 = 1200;
+    public static final int v1_19 = 1190;
+    public static final int v1_18_1 = 1181;
+    public static final int v1_18 = 1180;
+    public static final int v1_17 = 1170;
+    public static final int v1_16 = 1160;
+    public static final int v1_15 = 1150;
+    public static final int v1_14 = 1140;
+    public static final int v1_13 = 1130;
+    public static final int v1_12 = 1120;
+
+    public static final boolean HAS_PLAYER_PROFILES = CURRENT_VERSION >= v1_18_1;
+    public static final boolean IS_SKULL_OWNER_LEGACY = CURRENT_VERSION <= v1_12;
+
     /**
      * Retrieves the current protocol version of the server.
-     * @return the protocol version or -1 if it fails to retrieve.
-     */
-    public static int getProtocolVersion() {
-        try {
-            String packageName = Bukkit.getServer().getClass().getPackage().getName();
-            String version = packageName.contains("v") ? packageName.substring(packageName.lastIndexOf('.') + 1) : "";
-            Class<?> sharedConstantsClass = getNMSClass();
-            if (sharedConstantsClass == null) {
-                System.out.println("[ProtocolUtils] SharedConstants class not found for version " + version);
-                return -1;
-            }
-            Object mcVersion = sharedConstantsClass.getMethod("getCurrentVersion").invoke(null);
-            Method method;
-            try {
-                method = mcVersion.getClass().getMethod("protocolVersion");
-            } catch (NoSuchMethodException e) {
-                method = mcVersion.getClass().getMethod("getProtocolVersion");
-            }
-            return (int) method.invoke(mcVersion);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            System.out.println("[ProtocolUtils] Falling back to legacy protocol version.");
-            return tryLegacyProtocolVersion();
-        }
-    }
-
-    /**
-     * Attempts to retrieve the protocol version using legacy methods.
-     * This is a fallback for older versions of Minecraft where the new method may not exist.
-     * @return the protocol version or -1 if it fails.
-     */
-    private static int tryLegacyProtocolVersion() {
-        try {
-            Class<?> serverClass = getLegacyNMSClass();
-            Method getServerMethod = serverClass.getMethod("getServer");
-            Object server = getServerMethod.invoke(null);
-
-            Field pingField = server.getClass().getDeclaredField("K");
-            pingField.setAccessible(true);
-            return pingField.getInt(server);
-        } catch (Throwable t) {
-            t.printStackTrace();
-            return -1;
-        }
-    }
-
-    /**
-     * Get an NMS class by name.
      *
-     * @return the class
+     * @return The protocol version as an integer.
+     * @throws RuntimeException if the protocol version cannot be determined.
      */
-    @Nullable
-    private static Class<?> getNMSClass() {
-        try {
-            return Class.forName("net.minecraft." + "SharedConstants");
-        } catch (ClassNotFoundException e) {
-            return null;
+    private static int getProtocolVersion() {
+        final Matcher matcher = Pattern.compile("(?<version>\\d+\\.\\d+)(?<patch>\\.\\d+)?").matcher(Bukkit.getBukkitVersion());
+        final StringBuilder stringBuilder = new StringBuilder();
+        if (matcher.find()) {
+            stringBuilder.append(matcher.group("version").replace(".", ""));
+            final String patch = matcher.group("patch");
+            if (patch == null) stringBuilder.append("0");
+            else stringBuilder.append(patch.replace(".", ""));
         }
-    }
-
-    /**
-     * Get a legacy NMS class by name.
-     *
-     * @return the class
-     */
-    @Nullable
-    private static Class<?> getLegacyNMSClass() {
-        try {
-            String packageName = Bukkit.getServer().getClass().getPackage().getName();
-            String version = packageName.contains("v") ? packageName.substring(packageName.lastIndexOf('.') + 1) : "";
-            String className = version.isEmpty()
-                    ? "net.minecraft.server." + "MinecraftServer"
-                    : "net.minecraft.server." + version + "." + "MinecraftServer";
-            return Class.forName(className);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
+        final Integer version = Ints.tryParse(stringBuilder.toString());
+        if (version == null) throw new RuntimeException("Could not retrieve server protocol version!");
+        return version;
     }
 
 }

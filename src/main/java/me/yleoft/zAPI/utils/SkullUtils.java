@@ -24,7 +24,8 @@ import java.util.Base64;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static me.yleoft.zAPI.utils.ProtocolUtils.getProtocolVersion;
+import static me.yleoft.zAPI.utils.ProtocolUtils.HAS_PLAYER_PROFILES;
+import static me.yleoft.zAPI.utils.ProtocolUtils.IS_SKULL_OWNER_LEGACY;
 
 /**
  * SkullUtils is a utility class for handling player skulls in Minecraft.
@@ -38,7 +39,7 @@ public abstract class SkullUtils {
 
     static {
         // Initialize the original head ItemStack based on the server version
-        originalHead = new ItemStack(getHeadMaterial());
+        originalHead = getHeadItemStack();
     }
 
     /**
@@ -46,8 +47,8 @@ public abstract class SkullUtils {
      *
      * @return Material for player heads
      */
-    public static Material getHeadMaterial() {
-        return isNewHead() ? Material.PLAYER_HEAD : Material.getMaterial("SKULL_ITEM");
+    public static ItemStack getHeadItemStack() {
+        return isNewHead() ? new ItemStack(Material.PLAYER_HEAD) : new ItemStack(Material.getMaterial("SKULL_ITEM"), 1, (short) 3);
     }
 
     /**
@@ -57,6 +58,20 @@ public abstract class SkullUtils {
      */
     public static boolean isNewHead() {
         return Arrays.stream(Material.values()).map(Material::name).collect(Collectors.toList()).contains("PLAYER_HEAD");
+    }
+
+    /**
+     * Get the base64 encoded texture URL for a given texture URL
+     *
+     * @param url the texture URL to encode
+     * @return base64 encoded texture URL
+     */
+    @NotNull
+    public static String getEncoded(@NotNull final String url) {
+        final byte[] encodedData = Base64.getEncoder().encode(String
+                .format("{textures:{SKIN:{url:\"%s\"}}}", "https://textures.minecraft.net/texture/" + url)
+                .getBytes());
+        return new String(encodedData);
     }
 
     /**
@@ -78,9 +93,9 @@ public abstract class SkullUtils {
 
         final OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(name);
 
-        if (getProtocolVersion() >= 757 && offlinePlayer.getPlayerProfile().getTextures().isEmpty()) {
+        if (HAS_PLAYER_PROFILES && offlinePlayer.getPlayerProfile().getTextures().isEmpty()) {
             meta.setOwnerProfile(offlinePlayer.getPlayerProfile().update().join());
-        } else if (getProtocolVersion() >= 393) {
+        } else if (IS_SKULL_OWNER_LEGACY) {
             meta.setOwningPlayer(offlinePlayer);
         } else {
             meta.setOwner(offlinePlayer.getName());
@@ -108,7 +123,7 @@ public abstract class SkullUtils {
             return head;
         }
 
-        if (getProtocolVersion() >= 757) {
+        if (HAS_PLAYER_PROFILES) {
             final PlayerProfile profile = getPlayerProfile(base64Url);
             headMeta.setOwnerProfile(profile);
             head.setItemMeta(headMeta);

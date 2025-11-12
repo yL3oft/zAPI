@@ -5,9 +5,10 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static me.yleoft.zAPI.utils.SkullUtils.originalHead;
+import static me.yleoft.zAPI.utils.SkullUtils.*;
 
 /**
  * Utility class for handling player heads.
@@ -29,10 +30,23 @@ public abstract class HeadUtils {
     public static ItemStack getPlayerHeadFromString(@NotNull final String type, @NotNull final String value) {
         switch (type) {
             case "head": {
+                if(value.startsWith("http://") || value.startsWith("https://")) {
+                    return getPlayerHeadFromString("urlhead", value);
+                } else if(value.length() >= 32) {
+                    return getPlayerHeadFromString("base64head", value);
+                } else {
+                    return getPlayerHeadFromString("namehead", value);
+                }
+            }
+            case "namehead": {
                 return getPlayerHead(value);
             }
             case "base64head": {
                 return getPlayerHeadB64(value);
+            }
+            case "urlhead": {
+                String encoded = getEncoded(value);
+                return getPlayerHeadB64(encoded);
             }
             default: return originalHead.clone();
         }
