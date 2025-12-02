@@ -2,6 +2,8 @@ package me.yleoft.zAPI.utils;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.yleoft.zAPI.zAPI;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
@@ -42,6 +44,20 @@ public abstract class StringUtils {
     }
 
     /**
+     * Transform a string by applying color codes, hex codes, placeholders and converting links.
+     * @param p The player to apply placeholders for
+     * @param string The string to transform
+     * @return The transformed TextComponent array
+     */
+    @NotNull
+    public static TextComponent[] transformTC(@Nullable final OfflinePlayer p, @NotNull String string) {
+        string = hex(string);
+        string = color(string);
+        string = applyPlaceholders(p, string);
+        return link(string);
+    }
+
+    /**
      * Transform a string by applying color codes and hex codes.
      * @param string The string to transform
      * @return The transformed string
@@ -49,6 +65,16 @@ public abstract class StringUtils {
     @NotNull
     public static String transform(@NotNull String string) {
         return transform(null, string);
+    }
+
+    /**
+     * Transform a string by applying color codes, hex codes and converting links.
+     * @param string The string to transform
+     * @return The transformed TextComponent array
+     */
+    @NotNull
+    public static TextComponent[] transformTC(@NotNull String string) {
+        return transformTC(null, string);
     }
 
     /**
@@ -110,6 +136,42 @@ public abstract class StringUtils {
     }
 
     /**
+     * Convert URLs in a string to clickable links (With text if needed).
+     * @param string The string to convert
+     * @return The string with clickable links
+     */
+    public static TextComponent[] link(String string) {
+        Pattern pattern = Pattern.compile("\\[([^]]+)]\\((cmd_[^)]+)\\)|\\[([^]]+)]\\((https?://[^)\\s]+)\\)");
+        Matcher matcher = pattern.matcher(string);
+        TextComponent message = new TextComponent();
+        int lastIndex = 0;
+        while (matcher.find()) {
+            if (matcher.start() > lastIndex) {
+                String before = string.substring(lastIndex, matcher.start());
+                message.addExtra(new TextComponent(before));
+            }
+            if (matcher.group(2) != null) {
+                String text = matcher.group(1);
+                String cmd = matcher.group(2).substring(4);
+                TextComponent link = new TextComponent(text);
+                link.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, cmd));
+                message.addExtra(link);
+            } else {
+                String text = matcher.group(3);
+                String url = matcher.group(4);
+                TextComponent link = new TextComponent(text);
+                link.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url));
+                message.addExtra(link);
+            }
+            lastIndex = matcher.end();
+        }
+        if (lastIndex < string.length()) {
+            message.addExtra(new TextComponent(string.substring(lastIndex)));
+        }
+        return new TextComponent[]{message};
+    }
+
+    /**
      * Check if a string is an integer.
      * @param strNum The string to check
      * @return true if the string is an integer, false otherwise
@@ -151,10 +213,16 @@ public abstract class StringUtils {
         private static final long MS_IN_HOUR = 60L * 60 * 1000;
         private static final long MS_IN_MINUTE = 60L * 1000;
 
+        // Regex pattern to match time strings like "1y", "2mo", "3w", "4d", "5h", "6m", "7s"
         private static final Pattern TIME_PATTERN = Pattern.compile(
                 "(\\d+)(y|mo|w|d|h|m|s)", Pattern.CASE_INSENSITIVE
         );
 
+        /**
+         * Parse a time string to milliseconds.
+         * @param timeString The time string to parse
+         * @return The time in milliseconds
+         */
         public static long parseTimeToMilliseconds(String timeString) {
             if (timeString == null || timeString.isEmpty()) {
                 throw new IllegalArgumentException("Time string cannot be null or empty");
@@ -197,6 +265,11 @@ public abstract class StringUtils {
             return totalMs;
         }
 
+        /**
+         * Format milliseconds to a time string.
+         * @param totalMs The total milliseconds to format
+         * @return The formatted time string
+         */
         public static String formatMsToString(long totalMs) {
             if (totalMs <= 0) {
                 return "0s";

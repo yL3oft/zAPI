@@ -100,6 +100,9 @@ public abstract class zAPI {
         init(plugin, pluginName, coloredPluginName, false);
     }
 
+    /**
+     * Disable zAPI & cleanup resources
+     */
     public static void disable() {
         if(plugin == null) return;
         if (!isFolia()) {

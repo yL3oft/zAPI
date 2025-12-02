@@ -56,4 +56,38 @@ public abstract class ActionbarUtils extends ProtocolUtils {
         } catch (Exception ignored) {
         }
     }
+
+    /**
+     * Sends an action bar message to a player.
+     *
+     * @param player  The player to send the message to.
+     * @param message The message to send as an array of TextComponents.
+     */
+    public static void send(@NotNull Player player, @NotNull TextComponent[] message) {
+        if (!legacy) {
+            try {
+                player.spigot().sendMessage(ChatMessageType.ACTION_BAR, message);
+                return;
+            } catch (Exception ignored) {
+            }
+        }
+
+        try {
+            Object handle = player.getClass().getMethod("getHandle").invoke(player);
+            Object connection = handle.getClass().getField("playerConnection").get(handle);
+
+            Class<?> chatSerializer = Class.forName("net.minecraft.server." + version + ".IChatBaseComponent$ChatSerializer");
+            Method a = chatSerializer.getMethod("a", String.class);
+            Object icbc = a.invoke(null, "{\"text\":\"" + message + "\"}");
+
+            Class<?> packetPlayOutChat = Class.forName("net.minecraft.server." + version + ".PacketPlayOutChat");
+            Constructor<?> constructor = packetPlayOutChat.getConstructor(
+                    Class.forName("net.minecraft.server." + version + ".IChatBaseComponent"), byte.class
+            );
+
+            Object packet = constructor.newInstance(icbc, (byte) 2);
+            connection.getClass().getMethod("sendPacket", Class.forName("net.minecraft.server." + version + ".Packet")).invoke(connection, packet);
+        } catch (Exception ignored) {
+        }
+    }
 }
