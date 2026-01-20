@@ -1,6 +1,9 @@
-package me.yleoft.zAPI.utils;
+package me.yleoft.zAPI.item;
 
 import de.tr7zw.changeme.nbtapi.NBT;
+import me.yleoft.zAPI.zAPI;
+import net.kyori.adventure.text.Component;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,12 +13,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static me.yleoft.zAPI.zAPI.customCommandNBT;
-
 /**
  * NbtUtils class to handle NBT operations on items.
  */
-public abstract class NbtUtils {
+public abstract class NbtHandler {
+
+    public static final String mark = "zAPI:"+ zAPI.getPlugin().getPluginMeta().getName()+"-unpickable";
+    public static final String customCommandNBT = "zAPI:"+zAPI.getPlugin().getPluginMeta().getName()+"-customCommand";
 
     /**
      * Marks an item with a specific mark.
@@ -159,6 +163,14 @@ public abstract class NbtUtils {
             }
             return commands;
         });
+    }
+
+    public static void cleanInventory(@NotNull final Player player, @NotNull String mark) {
+        for (ItemStack item : player.getInventory().getContents()) {
+            if(item == null) continue;
+            if(!isMarked(item, mark)) continue;
+            player.getInventory().remove(item);
+        }
     }
 
 }

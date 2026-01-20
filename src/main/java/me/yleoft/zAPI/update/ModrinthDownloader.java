@@ -1,12 +1,15 @@
-package me.yleoft.zAPI.utils;
+package me.yleoft.zAPI.update;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 
-import java.io.*;
-import java.net.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.List;
 
 /**
  * ModrinthDownloader is a utility class for downloading the latest version of a Modrinth project.

@@ -1,5 +1,8 @@
-package me.yleoft.zAPI.utils;
+package me.yleoft.zAPI.player;
 
+import me.yleoft.zAPI.item.NbtHandler;
+import me.yleoft.zAPI.utility.Version;
+import me.yleoft.zAPI.utility.scheduler.Scheduler;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -15,13 +18,12 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static me.yleoft.zAPI.utils.ItemStackUtils.mark;
-import static me.yleoft.zAPI.zAPI.isFolia;
+import static me.yleoft.zAPI.item.NbtHandler.mark;
 
 /**
  * Utility class for player-related operations.
  */
-public abstract class PlayerUtils {
+public final class PlayerHandler {
 
     private static final Pattern START_PATTERN = Pattern.compile("^\\[(\\d+(?:\\.\\d+)?)]");
 
@@ -32,7 +34,7 @@ public abstract class PlayerUtils {
      * @return the OfflinePlayer object, or null if not found
      */
     public static OfflinePlayer getOfflinePlayer(@NotNull UUID uuid) {
-        if(isFolia()) {
+        if(Version.USING_FOLIA) {
             try {
                 Method getOfflinePlayerMethod = Bukkit.getServer().getClass().getMethod("getOfflinePlayerIfCached", UUID.class);
                 return (OfflinePlayer) getOfflinePlayerMethod.invoke(Bukkit.getServer(), uuid);
@@ -49,7 +51,7 @@ public abstract class PlayerUtils {
      * @return the OfflinePlayer object, or null if not found
      */
     public static OfflinePlayer getOfflinePlayer(@NotNull String name) {
-        if(isFolia()) {
+        if(Version.USING_FOLIA) {
             try {
                 Method getOfflinePlayerMethod = Bukkit.getServer().getClass().getMethod("getOfflinePlayerIfCached", String.class);
                 return (OfflinePlayer) getOfflinePlayerMethod.invoke(Bukkit.getServer(), name);
@@ -70,7 +72,7 @@ public abstract class PlayerUtils {
         if(command.startsWith("[CON]") || (!command.startsWith("[") && player == null)) {
             command = cleanCommand(command.replace("[CON]", ""));
             String finalCommand = command;
-            SchedulerUtils.runTask(null, () -> zAPI.getPlugin().getServer().dispatchCommand(zAPI.getPlugin().getServer().getConsoleSender(), finalCommand));
+            Scheduler.runTask(null, () -> zAPI.getPlugin().getServer().dispatchCommand(zAPI.getPlugin().getServer().getConsoleSender(), finalCommand));
             return;
         }
         if(command.startsWith("[INV]")) {
@@ -85,9 +87,9 @@ public abstract class PlayerUtils {
 
             command = cleanCommand(command.replace("[ITEM]", ""));
             if(command.equalsIgnoreCase("give") && player.getInventory().firstEmpty() != -1) {
-                if(zAPI.useNBTAPI && NbtUtils.isMarked(item, mark)) {
-                    NbtUtils.unmarkItem(item, mark);
-                    NbtUtils.removeCustomCommands(item);
+                if(zAPI.useNBTAPI && NbtHandler.isMarked(item, mark)) {
+                    NbtHandler.unmarkItem(item, mark);
+                    NbtHandler.removeCustomCommands(item);
                 }
                 player.getInventory().addItem(item);
             }
@@ -112,7 +114,7 @@ public abstract class PlayerUtils {
         }
         if(player == null) return;
         @NotNull String finalCommand = command;
-        SchedulerUtils.runTask(player.getLocation(), () -> player.performCommand(cleanCommand(finalCommand)));
+        Scheduler.runTask(player.getLocation(), () -> player.performCommand(cleanCommand(finalCommand)));
     }
     public static void performCommand(@Nullable Player player, @Nullable ItemStack item, @NotNull String command) {
         performCommand(player, item, command, false);

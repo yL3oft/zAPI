@@ -1,7 +1,5 @@
-package me.yleoft.zAPI.managers;
+package me.yleoft.zAPI.logging;
 
-import me.yleoft.zAPI.utils.FileUtils;
-import me.yleoft.zAPI.utils.LogUtils;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
@@ -27,8 +25,8 @@ public abstract class LogManager {
     /**
      * Returns a list of all log utils loaded.
      */
-    public static List<LogUtils> getFiles() {
-        List<LogUtils> lus = new ArrayList<>();
+    public static List<FileLogger> getFiles() {
+        List<FileLogger> lus = new ArrayList<>();
         logFiles.forEach(cl -> lus.add(cl.getLu()));
         return lus;
     }
@@ -36,9 +34,9 @@ public abstract class LogManager {
     /**
      * Creates a new file in the plugin's data folder.
      * @param name The path of the file to create.
-     * @return The {@link FileUtils} of the created file or an existing file.
+     * @return The {@link FileLogger} of the created file or an existing file.
      */
-    public static LogUtils createFile(@NotNull String name) {
+    public static FileLogger createFile(@NotNull String name) {
         for (CustomLog cl : logFiles) {
             if (cl.getName().equals(name)) {
                 return cl.getLu();
@@ -55,7 +53,7 @@ public abstract class LogManager {
      * @return The {@link YamlConfiguration} of the file.
      * @throws IllegalArgumentException if the file is not found.
      */
-    public static LogUtils getLogUtil(@NotNull String name) {
+    public static FileLogger getLogUtil(@NotNull String name) {
         for (CustomLog cl : logFiles) {
             if (cl.getName().equals(name)) {
                 return cl.getLu();
@@ -86,7 +84,7 @@ public abstract class LogManager {
      * It provides methods to create and manage custom log files.
      */
     private static class CustomLog {
-        private final LogUtils lu;
+        private final FileLogger lu;
         private final String name;
 
         /**
@@ -94,7 +92,7 @@ public abstract class LogManager {
          * @param name The path of the file to create.
          */
         public CustomLog(@NotNull String name) {
-            this.lu = new LogUtils(logFolder, name);
+            this.lu = new FileLogger(logFolder, name);
             this.name = name;
         }
 
@@ -110,7 +108,7 @@ public abstract class LogManager {
          * Gets the log utils.
          * @return The log utils.
          */
-        public LogUtils getLu() {
+        public FileLogger getLu() {
             return lu;
         }
 

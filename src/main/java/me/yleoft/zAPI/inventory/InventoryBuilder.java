@@ -1,8 +1,10 @@
 package me.yleoft.zAPI.inventory;
 
-import me.yleoft.zAPI.managers.PluginYAMLManager;
-import me.yleoft.zAPI.utils.MaterialUtils;
-import me.yleoft.zAPI.utils.StringUtils;
+import me.yleoft.zAPI.item.ItemBuilder;
+import me.yleoft.zAPI.item.NbtHandler;
+import me.yleoft.zAPI.utility.PluginYAML;
+import me.yleoft.zAPI.utility.TextFormatter;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -18,33 +20,31 @@ import java.util.*;
 import static java.lang.Math.floor;
 import static java.lang.Math.random;
 import static java.util.Objects.requireNonNull;
-import static me.yleoft.zAPI.utils.ConfigUtils.formPath;
-import static me.yleoft.zAPI.utils.ItemStackUtils.*;
-import static me.yleoft.zAPI.utils.NbtUtils.addCustomCommands;
+import static me.yleoft.zAPI.configuration.Path.formPath;
 
 /**
  * CustomInventory class to create a custom inventory with a specified name and number of rows.
  * The inventory can hold items and can be retrieved as an Inventory object.
  */
-public class CustomInventory {
+public class InventoryBuilder {
 
     public static final String configPathInventory = "Inventory";
     public static final String configPathItems = "Items";
 
     private YamlConfiguration config;
-    private String inventoryName;
+    private Component inventoryName;
     private final int rows;
     private final Map<Integer, ItemStack> items = new HashMap<>();
 
     public static void loadMenuCommand(@NotNull YamlConfiguration config) {
         if(config.contains("command") && config.isString("command")) {
-            String inventoryName = StringUtils.transform(requireNonNull(config.getString(formPath(configPathInventory, "title"))));
+            Component inventoryName = TextFormatter.transform(requireNonNull(config.getString(formPath(configPathInventory, "title"))));
             String command = config.getString("command");
-            if(!PluginYAMLManager.isCommandRegistered(command)) {
-                PluginYAMLManager.registerCommand(command, (sender, cmd, label, args) -> {
+            if(!PluginYAML.isCommandRegistered(command)) {
+                PluginYAML.registerCommand(command, (sender, cmd, label, args) -> {
                     if (sender instanceof Player) {
                         Player p = (Player) sender;
-                        CustomInventory inventory = new CustomInventory(p, config);
+                        InventoryBuilder inventory = new InventoryBuilder(p, config);
                         p.openInventory(inventory.getInventory());
                         return false;
                     }
@@ -60,7 +60,7 @@ public class CustomInventory {
      * @param rows The number of rows (1-6).
      * @throws IllegalArgumentException if the number of rows is not between 1 and 6.
      */
-    public CustomInventory(@NotNull String inventoryName, int rows) {
+    public InventoryBuilder(@NotNull Component inventoryName, int rows) {
         if (rows < 1 || rows > 6) {
             throw new IllegalArgumentException("Number of rows must be between 1 and 6");
         }
@@ -72,21 +72,21 @@ public class CustomInventory {
      * Creates a custom inventory from a YamlConfiguration file.
      * @param config The YamlConfiguration file to load the inventory from.
      */
-    public CustomInventory(@Nullable Player player, @NotNull YamlConfiguration config) {
+    public InventoryBuilder(@Nullable Player player, @NotNull YamlConfiguration config) {
         this.config = config;
-        this.inventoryName = StringUtils.transform(player, requireNonNull(config.getString(formPath(configPathInventory, "title"))));
+        this.inventoryName = TextFormatter.transform(player, requireNonNull(config.getString(formPath(configPathInventory, "title"))));
         this.rows = config.getInt(formPath(configPathInventory, "rows"), 3);
 
         for(String itemPath : config.getConfigurationSection(configPathItems).getKeys(false)) {
             String materialPath = formPath(configPathItems, itemPath, "material");
             String slotPath = formPath(configPathItems, itemPath, "slot");
-            ItemStack item = getItemFromConfig(player, config, formPath(configPathItems, itemPath));
+            ItemStack item = ItemBuilder.getItemFromConfig(player, config, formPath(configPathItems, itemPath));
             String slotS = config.getString(slotPath);
             assert slotS != null;
             setItem(config, materialPath, slotS, item, null);
         }
     }
-    public CustomInventory(@NotNull YamlConfiguration config) {
+    public InventoryBuilder(@NotNull YamlConfiguration config) {
         this(null, config);
     }
 
@@ -101,10 +101,10 @@ public class CustomInventory {
             throw new IllegalArgumentException("Slot must be between 0 and " + (rows*9 - 1));
         }
         if (replaces != null && !replaces.isEmpty()) {
-            addCustomCommands(item, commands, replaces);
-            replaceAll(item, replaces);
+            NbtHandler.addCustomCommands(item, commands, replaces);
+            ItemBuilder.replaceAllString(item, replaces);
         }else {
-            addCustomCommands(item, commands);
+            NbtHandler.addCustomCommands(item, commands);
         }
         items.put(slot, item);
     }
@@ -129,7 +129,7 @@ public class CustomInventory {
             int end = Integer.parseInt(parts[1]);
             if(config != null && materialPath != null && config.isList(materialPath)) {
                 List<Material> materials = new ArrayList<>();
-                config.getStringList(materialPath).forEach(m -> materials.add(MaterialUtils.getMaterial(m)));
+                config.getStringList(materialPath).forEach(m -> materials.add(ItemBuilder.getMaterial(m)));
                 for (int i = start; i <= end; i++) {
                     item.setType(materials.get((int) (floor(random() * materials.size()))));
                     setItem(i, item.clone(), replaces);
@@ -151,12 +151,12 @@ public class CustomInventory {
             Map<String, String> hash = new HashMap<>();
             if (replace != null && replacers != null && !replacers.isEmpty()) {
                 hash.put(replace, replacers.get(0));
-                item = getItemFromConfig(player, config, path, hash);
+                item = ItemBuilder.getItemFromConfigString(player, config, path, hash);
                 setItem(Integer.parseInt(slot), item, hash);
                 return;
             }
             if(addIfEmpty) {
-                item = getItemFromConfig(player, config, path);
+                item = ItemBuilder.getItemFromConfig(player, config, path);
                 setItem(Integer.parseInt(slot), item, hash);
             }
         } else if (slot.matches("\\d+-\\d+")) {
@@ -165,19 +165,19 @@ public class CustomInventory {
             int end = Integer.parseInt(parts[1]);
             if(config.isList(materialPath)) {
                 List<Material> materials = new ArrayList<>();
-                config.getStringList(materialPath).forEach(m -> materials.add(MaterialUtils.getMaterial(m)));
+                config.getStringList(materialPath).forEach(m -> materials.add(ItemBuilder.getMaterial(m)));
                 for (int i = start; i <= end; i++) {
                     Map<String, String> hash = new HashMap<>();
                     if (replace != null && replacers != null && !replacers.isEmpty()) {
                         hash.put(replace, replacers.get(0));
-                        item = getItemFromConfig(player, config, path, hash);
+                        item = ItemBuilder.getItemFromConfigString(player, config, path, hash);
                         item.setType(materials.get((int) (floor(random() * materials.size()))));
                         setItem(i, item.clone(), hash);
                         replacers.remove(0);
                         continue;
                     }
                     if(addIfEmpty) {
-                        item = getItemFromConfig(player, config, path);
+                        item = ItemBuilder.getItemFromConfig(player, config, path);
                         item.setType(materials.get((int) (floor(random() * materials.size()))));
                         setItem(i, item.clone());
                     }
@@ -187,13 +187,13 @@ public class CustomInventory {
                     Map<String, String> hash = new HashMap<>();
                     if (replace != null && replacers != null && !replacers.isEmpty()) {
                         hash.put(replace, replacers.get(0));
-                        item = getItemFromConfig(player, config, path, hash);
+                        item = ItemBuilder.getItemFromConfigString(player, config, path, hash);
                         setItem(i, item.clone(), hash);
                         replacers.remove(0);
                         continue;
                     }
                     if(addIfEmpty) {
-                        item = getItemFromConfig(player, config, path);
+                        item = ItemBuilder.getItemFromConfig(player, config, path);
                         setItem(i, item.clone());
                     }
                 }
@@ -221,7 +221,7 @@ public class CustomInventory {
      * @param inventoryName The name of the inventory.
      */
     public void setInventoryName(@Nullable OfflinePlayer player, @NotNull String inventoryName) {
-        this.inventoryName = StringUtils.transform(player, inventoryName);
+        this.inventoryName = TextFormatter.transform(player, inventoryName);
     }public void setInventoryName(@NotNull String inventoryName) {
         setInventoryName(null, inventoryName);
     }
@@ -231,7 +231,7 @@ public class CustomInventory {
      * @return The name of the inventory.
      */
     @NotNull
-    public String getInventoryName() {
+    public Component getInventoryName() {
         return inventoryName;
     }
 
@@ -265,7 +265,7 @@ public class CustomInventory {
      * @return The created inventory.
      */
     public Inventory getInventory() {
-        Inventory inv = Bukkit.createInventory(null, rows*9, StringUtils.transform(inventoryName));
+        Inventory inv = Bukkit.createInventory(null, rows*9, TextFormatter.transform(inventoryName));
         inv.setContents(getItemsArray());
         return inv;
     }

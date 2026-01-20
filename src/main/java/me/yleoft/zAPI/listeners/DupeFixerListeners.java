@@ -1,8 +1,7 @@
 package me.yleoft.zAPI.listeners;
 
-import me.yleoft.zAPI.utils.InventoryUtils;
-import me.yleoft.zAPI.utils.NbtUtils;
-import me.yleoft.zAPI.utils.SchedulerUtils;
+import me.yleoft.zAPI.item.NbtHandler;
+import me.yleoft.zAPI.utility.scheduler.Scheduler;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,25 +11,22 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.jetbrains.annotations.NotNull;
 
-import static me.yleoft.zAPI.utils.ItemStackUtils.mark;
-
 /**
  * DupeFixerListeners is a listener class that handles various events related to item duplication.
  * It prevents players from picking up or dropping items that are marked for duplication.
  */
-public class DupeFixerListeners implements Listener {
+public class DupeFixerListeners extends NbtHandler implements Listener {
 
     /**
      * Searches for a marked item in the player's inventory and removes it if found.
      */
     @EventHandler
     private void onClose(@NotNull final InventoryCloseEvent event) {
-        if (!(event.getPlayer() instanceof Player)) {
+        if (!(event.getPlayer() instanceof Player player)) {
             return;
         }
-        Player player = (Player) event.getPlayer();
 
-        SchedulerUtils.runTaskLater(player.getLocation(), () -> InventoryUtils.cleanInventory(player, mark), 3L);
+        Scheduler.runTaskLater(player.getLocation(), () -> cleanInventory(player, mark), 3L);
     }
 
     /**
@@ -38,7 +34,7 @@ public class DupeFixerListeners implements Listener {
      */
     @EventHandler
     private void onPickup(@NotNull final EntityPickupItemEvent event) {
-        if (!NbtUtils.isMarked(event.getItem().getItemStack(), mark)) {
+        if (!isMarked(event.getItem().getItemStack(), mark)) {
             return;
         }
 
@@ -50,7 +46,7 @@ public class DupeFixerListeners implements Listener {
      */
     @EventHandler
     private void onDrop(@NotNull final PlayerDropItemEvent event) {
-        if (!NbtUtils.isMarked(event.getItemDrop().getItemStack(), mark)) {
+        if (!isMarked(event.getItemDrop().getItemStack(), mark)) {
             return;
         }
 
@@ -62,7 +58,7 @@ public class DupeFixerListeners implements Listener {
      */
     @EventHandler
     private void onLogin(@NotNull final PlayerLoginEvent event) {
-        SchedulerUtils.runTaskLater(event.getPlayer().getLocation(), () -> InventoryUtils.cleanInventory(event.getPlayer(), mark), 10L);
+        Scheduler.runTaskLater(event.getPlayer().getLocation(), () -> cleanInventory(event.getPlayer(), mark), 10L);
     }
 
 }

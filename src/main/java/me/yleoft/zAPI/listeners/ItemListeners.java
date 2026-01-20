@@ -1,6 +1,7 @@
 package me.yleoft.zAPI.listeners;
 
-import me.yleoft.zAPI.utils.NbtUtils;
+import me.yleoft.zAPI.item.NbtHandler;
+import me.yleoft.zAPI.player.PlayerHandler;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,13 +13,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-import static me.yleoft.zAPI.utils.ItemStackUtils.mark;
-import static me.yleoft.zAPI.utils.PlayerUtils.performCommand;
-
 /**
  * ItemListeners is a listener class for handling item interactions in inventories.
  */
-public class ItemListeners extends NbtUtils implements Listener {
+public class ItemListeners extends NbtHandler implements Listener {
 
     /**
      * Search for custom commands in the item clicked.
@@ -26,10 +24,9 @@ public class ItemListeners extends NbtUtils implements Listener {
      */
     @EventHandler(priority = EventPriority.LOW)
     public void onClick(@NotNull final InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) {
+        if (!(event.getWhoClicked() instanceof Player player)) {
             return;
         }
-        Player player = (Player) event.getWhoClicked();
 
         if (event.getCurrentItem() == null || event.getCurrentItem().getType() == Material.AIR || event.getCurrentItem().getAmount() < 0) {
             return;
@@ -42,7 +39,7 @@ public class ItemListeners extends NbtUtils implements Listener {
             }
 
             List<String> commands = getCustomCommands(item);
-            performCommand(player, item, commands);
+            PlayerHandler.performCommand(player, item, commands);
         }
     }
 

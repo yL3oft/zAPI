@@ -1,15 +1,16 @@
-package me.yleoft.zAPI.managers;
+package me.yleoft.zAPI.configuration;
 
+import me.yleoft.zAPI.zAPI;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,43 +19,58 @@ import java.util.Map;
  */
 public class LanguageManager {
 
-    private final File folder;
+    private final List<YAMLBuilder> languages;
     private final String languageCode;
     private final String fallbackLanguageCode;
     private final Map<String, Object> options = new HashMap<>();
     private final Map<String, Object> fallbackOptions = new HashMap<>();
-    private final File languageFile;
-    private File fallbackFile;
+    private final YAMLBuilder languageBuilder;
+    private YAMLBuilder fallbackBuilder;
 
-    public LanguageManager(@NotNull File folder, @NotNull String languageCode) throws IOException {
-        this(folder, languageCode, null);
+    /**
+     * Creates a new LanguageManager instance.
+     * @param languages The folder where the language files are located.
+     * @param languageCode The language code to use.
+     * @throws IOException If the language file cannot be found.
+     */
+    public LanguageManager(@NotNull List<YAMLBuilder> languages, @NotNull String languageCode) throws IOException {
+        this(languages, languageCode, null);
     }
 
     /**
      * Creates a new LanguageManager instance.
-     * @param folder The folder where the language files are located.
+     * @param languages The folder where the language files are located.
      * @param languageCode The language code to use.
      * @param fallbackLanguageCode The fallback language code to use.
      * @throws IOException If the language file cannot be found.
      */
-    public LanguageManager(@NotNull File folder, @NotNull String languageCode, @Nullable String fallbackLanguageCode) throws IOException {
-        this.folder = folder;
+    public LanguageManager(@NotNull List<YAMLBuilder> languages, @NotNull String languageCode, @Nullable String fallbackLanguageCode) throws IOException {
+        this.languages = languages;
         this.languageCode = languageCode;
         this.fallbackLanguageCode = fallbackLanguageCode;
 
-        this.languageFile = new File(folder, languageCode + ".yml");
-        if (!languageFile.exists()) {
-            throw new IOException("Language file not found: " + languageFile.getAbsolutePath());
+        this.languageBuilder = findLanguageBuilder(languageCode);
+        if (languageBuilder == null) {
+            zAPI.getLogger().warn("Language file not found for code: " + languageCode);
         }
 
         if (fallbackLanguageCode != null) {
-            this.fallbackFile = new File(folder, fallbackLanguageCode + ".yml");
-            if (!fallbackFile.exists()) {
-                throw new IOException("Fallback language file not found: " + fallbackFile.getAbsolutePath());
+            this.fallbackBuilder = findLanguageBuilder(fallbackLanguageCode);
+            if (fallbackBuilder == null) {
+                zAPI.getLogger().warn("Fallback language file not found for code: " + fallbackLanguageCode);
             }
         }
 
         load();
+    }
+
+    private YAMLBuilder findLanguageBuilder(String code) {
+        for (YAMLBuilder builder : languages) {
+            if (builder.getFile().getName().equals(code + ".yml")) {
+                return builder;
+            }
+        }
+        return null;
     }
 
     /**
@@ -100,15 +116,15 @@ public class LanguageManager {
             yaml = new Yaml();
         }
 
-        try (FileInputStream inputStream = new FileInputStream(languageFile)) {
+        try (FileInputStream inputStream = new FileInputStream(languageBuilder.getFile())) {
             Object data = yaml.load(inputStream);
             if (data instanceof Map) {
                 flattenMap("", (Map<?, ?>) data, options);
             }
         }
 
-        if (fallbackFile != null) {
-            try (FileInputStream inputStream = new FileInputStream(fallbackFile)) {
+        if (fallbackBuilder != null) {
+            try (FileInputStream inputStream = new FileInputStream(fallbackBuilder.getFile())) {
                 Object data = yaml.load(inputStream);
                 if (data instanceof Map) {
                     flattenMap("", (Map<?, ?>) data, fallbackOptions);
@@ -150,7 +166,7 @@ public class LanguageManager {
      * Gets the folder where the language files are located.
      * @return The folder where the language files are located.
      */
-    public File getFolder() {
-        return folder;
+    public List<YAMLBuilder> getLanguages() {
+        return languages;
     }
 }

@@ -1,4 +1,4 @@
-package me.yleoft.zAPI.folia;
+package me.yleoft.zAPI.utility.scheduler;
 
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.scheduler.BukkitRunnable;

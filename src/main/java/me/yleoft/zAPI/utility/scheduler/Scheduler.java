@@ -1,9 +1,9 @@
-package me.yleoft.zAPI.utility;
+package me.yleoft.zAPI.utility.scheduler;
 
 import io.papermc.paper.threadedregions.scheduler.GlobalRegionScheduler;
 import io.papermc.paper.threadedregions.scheduler.RegionScheduler;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
-import me.yleoft.zAPI.folia.FoliaRunnable;
+import me.yleoft.zAPI.utility.Version;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -15,8 +15,6 @@ import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
-
-import static me.yleoft.zAPI.zAPI.isFolia;
 
 /**
  * Utility class for scheduling tasks in a Paper/Folia server.

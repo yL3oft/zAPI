@@ -68,7 +68,7 @@ public class FileLogger {
      */
     public static File compressLogs() {
         File folder = LogManager.getLogFolder();
-        List<LogUtils> logs = LogManager.getFiles();
+        List<FileLogger> logs = LogManager.getFiles();
         if (logs.isEmpty()) {
             return null;
         }
@@ -79,7 +79,7 @@ public class FileLogger {
         File compressedFile = new File(folder, timestamp + ".zip");
         try (FileOutputStream fos = new FileOutputStream(compressedFile);
              ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(fos))) {
-            for (LogUtils log : logs) {
+            for (FileLogger log : logs) {
                 File file = log.getLogFile();
                 if (!file.exists()) continue;
                 try (FileInputStream fis = new FileInputStream(file);

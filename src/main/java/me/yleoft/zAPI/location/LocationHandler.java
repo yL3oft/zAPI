@@ -15,7 +15,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Utility class for location-related operations.
  */
-public abstract class LocationHandler {
+public final class LocationHandler {
 
     private static final EnumSet<Material> blacklistedGround = EnumSet.noneOf(Material.class);
 
@@ -181,7 +181,7 @@ public abstract class LocationHandler {
         return block.getType().isSolid() && !block.isLiquid() && !blacklistedGround.contains(type);
     }
 
-    private class MutableBlockLocation {
+    private static class MutableBlockLocation {
         private final World world;
         private int x, y, z;
 

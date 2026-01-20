@@ -1,5 +1,6 @@
-package me.yleoft.zAPI.utility;
+package me.yleoft.zAPI.logging;
 
+import me.yleoft.zAPI.utility.TextFormatter;
 import me.yleoft.zAPI.zAPI;
 import net.kyori.adventure.text.Component;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -8,14 +9,15 @@ public class Logger {
 
     private static final JavaPlugin plugin = zAPI.getPlugin();
     private boolean debugMode = false;
-    private String prefix;
+    private Component prefix;
 
     public Logger(String prefix) {
         setPrefix(prefix);
     }
-    public Logger() {
-        this("");
+    public Logger(Component prefix) {
+        setPrefix(prefix);
     }
+    public Logger() {}
 
     public void info(String message) {
         plugin.getComponentLogger().info(formatTransform(message));
@@ -34,7 +36,11 @@ public class Logger {
     }
 
     public void error(String message, Throwable throwable) {
-        plugin.getComponentLogger().error(formatTransform(message), throwable);
+        if (debugMode) {
+            plugin.getComponentLogger().error(formatTransform(message), throwable);
+        } else {
+            plugin.getComponentLogger().error(formatTransform(message));
+        }
     }
 
     public void debug(String message) {
@@ -58,14 +64,21 @@ public class Logger {
     /** Sets the prefix for log messages.
      * @param prefix The prefix to set
      */
-    public void setPrefix(String prefix) {
+    public void setPrefix(Component prefix) {
         this.prefix = prefix;
+    }
+
+    /** Sets the prefix for log messages.
+     * @param prefix The prefix to set
+     */
+    public void setPrefix(String prefix) {
+        this.prefix = TextFormatter.transform(prefix);
     }
 
     /** Gets the current prefix for log messages.
      * @return The current prefix
      */
-    public String getPrefix() {
+    public Component getPrefix() {
         return prefix;
     }
 
@@ -88,7 +101,7 @@ public class Logger {
     }
 
     private String format(String message) {
-        return getPrefix().isEmpty() ? message : getPrefix() + " " + message;
+        return getPrefix() == null ? message : zAPI.getMiniMessage().serialize(getPrefix()) + " " + message;
     }
 
 }

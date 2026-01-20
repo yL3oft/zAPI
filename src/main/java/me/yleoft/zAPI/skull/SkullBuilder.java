@@ -119,7 +119,7 @@ public abstract class SkullBuilder {
             return head;
         }
 
-        if (HAS_PLAYER_PROFILES) {
+        if (Version.HAS_PLAYER_PROFILES) {
             final PlayerProfile profile = getPlayerProfile(base64Url);
             headMeta.setOwnerProfile(profile);
             head.setItemMeta(headMeta);

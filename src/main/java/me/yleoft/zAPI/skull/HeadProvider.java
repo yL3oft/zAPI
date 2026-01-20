@@ -42,10 +42,10 @@ public abstract class HeadProvider {
                 return getPlayerHeadB64(value);
             }
             case "urlhead": {
-                String encoded = getEncoded(value);
+                String encoded = SkullBuilder.getEncoded(value);
                 return getPlayerHeadB64(encoded);
             }
-            default: return originalHead.clone();
+            default: return SkullBuilder.originalHead.clone();
         }
     }
 
@@ -58,11 +58,11 @@ public abstract class HeadProvider {
      */
     public static ItemStack getPlayerHead(@NotNull final String playerName) {
         try {
-            return cacheName.computeIfAbsent(playerName, SkullUtils::getSkullByName).clone();
+            return cacheName.computeIfAbsent(playerName, SkullBuilder::getSkullByName).clone();
         } catch (Exception exception) {
             zAPI.getPlugin().getLogger().severe("[zAPI] Failed to get head for player: " + playerName);
         }
-        return originalHead.clone();
+        return SkullBuilder.originalHead.clone();
     }
 
     /**
@@ -74,11 +74,11 @@ public abstract class HeadProvider {
      */
     public static ItemStack getPlayerHeadB64(@NotNull final String base64Url) {
         try {
-            return cacheBase64.computeIfAbsent(base64Url, SkullUtils::getSkullByBase64EncodedTextureUrl).clone();
+            return cacheBase64.computeIfAbsent(base64Url, SkullBuilder::getSkullByBase64EncodedTextureUrl).clone();
         } catch (Exception exception) {
             zAPI.getPlugin().getLogger().severe("[zAPI] Failed to get head for base64: " + base64Url);
         }
-        return originalHead.clone();
+        return SkullBuilder.originalHead.clone();
     }
 
 }

@@ -1,8 +1,7 @@
-package me.yleoft.zAPI.managers;
+package me.yleoft.zAPI.utility;
 
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -21,10 +20,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 /**
- * Optimized PluginYAMLManager for managing commands and permissions dynamically.
+ * Optimized PluginYAML for managing commands and permissions dynamically.
  * Java 17+ optimized with records, sealed classes, pattern matching, and text blocks.
  */
-public abstract sealed class PluginYAMLManager permits PluginYAMLManager.ReflectionCache {
+public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
 
     private static final PluginDescriptionFile DESCRIPTION_FILE = zAPI.getPlugin().getDescription();
     private static final Map<Command, Double> REGISTERED_COMMANDS = new ConcurrentHashMap<>();
@@ -34,7 +33,7 @@ public abstract sealed class PluginYAMLManager permits PluginYAMLManager.Reflect
     /**
      * Sealed helper class to encapsulate reflection caching logic.
      */
-    static final class ReflectionCache extends PluginYAMLManager {
+    static final class ReflectionCache extends PluginYAML {
         private static volatile CommandMap commandMapCache;
         private static volatile Field commandMapField;
         private static volatile Field knownCommandsField;
@@ -90,7 +89,7 @@ public abstract sealed class PluginYAMLManager permits PluginYAMLManager.Reflect
             return ReflectionCache.commandMapCache;
         }
 
-        synchronized (PluginYAMLManager.class) {
+        synchronized (PluginYAML.class) {
             if (ReflectionCache.commandMapCache != null) {
                 return ReflectionCache.commandMapCache;
             }
@@ -111,7 +110,7 @@ public abstract sealed class PluginYAMLManager permits PluginYAMLManager.Reflect
     @SuppressWarnings("unchecked")
     private static Map<String, Command> getKnownCommands(CommandMap commandMap) throws ReflectiveOperationException {
         if (ReflectionCache.knownCommandsField == null) {
-            synchronized (PluginYAMLManager.class) {
+            synchronized (PluginYAML.class) {
                 if (ReflectionCache.knownCommandsField == null) {
                     ReflectionCache.knownCommandsField = SimpleCommandMap.class.getDeclaredField("knownCommands");
                     ReflectionCache.knownCommandsField.setAccessible(true);
@@ -127,7 +126,7 @@ public abstract sealed class PluginYAMLManager permits PluginYAMLManager.Reflect
     public static void syncCommands() {
         try {
             if (ReflectionCache.syncCommandsMethod == null) {
-                synchronized (PluginYAMLManager.class) {
+                synchronized (PluginYAML.class) {
                     if (ReflectionCache.syncCommandsMethod == null) {
                         ReflectionCache.syncCommandsMethod = zAPI.getPlugin().getServer().getClass().getDeclaredMethod("syncCommands");
                         ReflectionCache.syncCommandsMethod.setAccessible(true);
@@ -185,7 +184,7 @@ public abstract sealed class PluginYAMLManager permits PluginYAMLManager.Reflect
         try {
             CommandMap commandMap = getCommandMap();
             Map<String, Command> knownCommands = getKnownCommands(commandMap);
-            String pluginPrefix = Optional.ofNullable(zAPI.getPluginName())
+            String pluginPrefix = Optional.of(zAPI.getPlugin().getPluginMeta().getName())
                     .map(name -> name.toLowerCase(Locale.ROOT))
                     .orElse("");
 
@@ -205,12 +204,9 @@ public abstract sealed class PluginYAMLManager permits PluginYAMLManager.Reflect
                     }
                 }
 
-                // Clean up executors for PluginCommands using pattern matching
-                for (Command command : REGISTERED_COMMANDS.keySet()) {
-                    if (command instanceof PluginCommand pluginCommand) {
-                        pluginCommand.setExecutor(emptyExec);
-                        pluginCommand.setTabCompleter(emptyExec);
-                    }
+                if (command instanceof PluginCommand pluginCommand) {
+                    pluginCommand.setExecutor(emptyExec);
+                    pluginCommand.setTabCompleter(emptyExec);
                 }
 
                 keysToRemove.forEach(knownCommands::remove);
@@ -293,7 +289,7 @@ public abstract sealed class PluginYAMLManager permits PluginYAMLManager.Reflect
 
         try {
             if (ReflectionCache.pluginCommandConstructor == null) {
-                synchronized (PluginYAMLManager.class) {
+                synchronized (PluginYAML.class) {
                     if (ReflectionCache.pluginCommandConstructor == null) {
                         ReflectionCache.pluginCommandConstructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
                         ReflectionCache.pluginCommandConstructor.setAccessible(true);
@@ -351,7 +347,7 @@ public abstract sealed class PluginYAMLManager permits PluginYAMLManager.Reflect
      * Unregisters all tracked permissions.
      */
     public static void unregisterPermissions() {
-        REGISTERED_PERMISSIONS.forEach(PluginYAMLManager::unregisterPermission);
+        REGISTERED_PERMISSIONS.forEach(PluginYAML::unregisterPermission);
     }
 
     /**

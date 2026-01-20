@@ -1,9 +1,8 @@
-package me.yleoft.zAPI.managers;
+package me.yleoft.zAPI.update;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import me.yleoft.zAPI.utils.ModrinthDownloader;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -142,6 +141,9 @@ public class UpdateManager {
             for (Path jarPath : stream) {
                 try (JarFile jf = new JarFile(jarPath.toFile())) {
                     JarEntry entry = jf.getJarEntry("plugin.yml");
+                    if (entry == null) {
+                        entry = jf.getJarEntry("paper-plugin.yml");
+                    }
                     if (entry == null) continue;
 
                     try (InputStream in = jf.getInputStream(entry)) {
