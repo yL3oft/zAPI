@@ -18,7 +18,7 @@ Releases & artifacts: https://github.com/yL3oft/zAPI/releases
 - And more...
 
 ## Requirements
-- Java 8+
+- Java 17+
 - Maven or Gradle build system
 - Internet access for dependency resolution
 - (Optional) Git for cloning the repository
