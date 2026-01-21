@@ -1024,6 +1024,124 @@ public class YAMLBuilder extends Path {
         }
     }
 
+    // ==================== RUNTIME SET (POST-BUILD) METHODS ====================
+
+    /**
+     * Sets a value in the ACTUAL config (cachedData) and saves to disk immediately.
+     * This is the "natural YAML" setter behavior (works after build()).
+     *
+     * If value is null -> removes the path.
+     */
+    public YAMLBuilder set(String path, Object value) {
+        // Ensure cache is loaded
+        if (cachedData == null) {
+            cachedData = new LinkedHashMap<>();
+        }
+
+        // Respect voiding: if voided, ignore (or you could unvoid; current behavior: ignore)
+        if (isVoided(path)) {
+            return this;
+        }
+
+        // Apply pending moves before writing anything so we don't resurrect old keys
+        if (!pendingMoves.isEmpty()) {
+            applyPendingMoves();
+        }
+
+        if (value == null) {
+            removeValueFromPath(cachedData, path);
+        } else {
+            // Normalize multiline strings into MultiLineString
+            Object yamlValue = value;
+
+            if (value instanceof String s) {
+                yamlValue = toYamlStringValue(s);
+            } else if (value instanceof String[] arr) {
+                yamlValue = (arr.length <= 1) ? toYamlStringValue(arr.length == 0 ? "" : arr[0]) : new MultiLineString(arr);
+            } else if (value instanceof List<?> list) {
+                // Keep list, but normalize each string entry if color migration is enabled (optional)
+                yamlValue = new ArrayList<>(list);
+            }
+
+            setValueAtPath(cachedData, path, yamlValue);
+        }
+
+        // Optionally migrate colors on write for runtime sets too
+        if (migrateLegacyColors) {
+            convertLegacyColorsInObject(cachedData);
+        }
+
+        // Remove any voided paths that may exist in cache
+        for (String voidedPath : voidedPaths) {
+            removeValueFromPath(cachedData, voidedPath);
+        }
+
+        // Write updated cache
+        try {
+            writeYamlFile(cachedData);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // Refresh internal state
+        loadExistingVersion();
+        loadCachedData();
+
+        return this;
+    }
+
+    /** Same as set(path, null) */
+    public YAMLBuilder unset(String path) {
+        return set(path, null);
+    }
+
+    public YAMLBuilder setString(String path, String value) {
+        return set(path, value);
+    }
+
+    public YAMLBuilder setBoolean(String path, boolean value) {
+        return set(path, value);
+    }
+
+    public YAMLBuilder setInt(String path, int value) {
+        return set(path, value);
+    }
+
+    /** Alias for people asking for "setInteger" */
+    public YAMLBuilder setInteger(String path, int value) {
+        return setInt(path, value);
+    }
+
+    public YAMLBuilder setLong(String path, long value) {
+        return set(path, value);
+    }
+
+    public YAMLBuilder setDouble(String path, double value) {
+        return set(path, value);
+    }
+
+    public YAMLBuilder setFloat(String path, float value) {
+        return set(path, value);
+    }
+
+    public YAMLBuilder setStringList(String path, List<String> value) {
+        return set(path, value == null ? null : new ArrayList<>(value));
+    }
+
+    public YAMLBuilder setList(String path, List<?> value) {
+        return set(path, value == null ? null : new ArrayList<>(value));
+    }
+
+    /**
+     * Sets a multi-line string block (|) at the given path.
+     * Each entry is one line.
+     */
+    public YAMLBuilder setMultiline(String path, String... lines) {
+        if (lines == null) return set(path, null);
+        if (lines.length <= 1) return set(path, lines.length == 0 ? "" : lines[0]);
+        return set(path, new MultiLineString(lines));
+    }
+
     // ==================== FILECONFIG METHOD ====================
 
     /**
@@ -1054,15 +1172,14 @@ public class YAMLBuilder extends Path {
     /**
      * Updates the version of the config.
      * Only updates if the new version is newer than the current version.
-     * Ignores if the file doesn't exist.
+     *
+     * IMPORTANT: This should also work before the file exists (first build),
+     * otherwise updateVersion() can't be used when generating a config for the first time.
      *
      * @param newVersion The new version string
      * @return This YAMLBuilder for chaining
      */
     public YAMLBuilder updateVersion(String newVersion) {
-        if (! file.exists()) {
-            return this;
-        }
         if (isValidVersion(newVersion) && compareVersions(newVersion, currentVersion) > 0) {
             currentVersion = newVersion;
         }
@@ -1355,8 +1472,19 @@ public class YAMLBuilder extends Path {
     }
 
     private static String[] splitLinesPreserveEmpty(String s) {
-        // -1 keeps trailing empty lines if present
-        return s.stripTrailing().split("\\R", -1);
+        if (s == null) return new String[0];
+
+        String normalized = s.replace("\r\n", "\n").replace('\r', '\n');
+
+        boolean endsWithNewline = !normalized.isEmpty() && normalized.charAt(normalized.length() - 1) == '\n';
+
+        String[] parts = normalized.split("\n", -1);
+
+        if (endsWithNewline && parts.length > 0 && parts[parts.length - 1].isEmpty()) {
+            parts = Arrays.copyOf(parts, parts.length - 1);
+        }
+
+        return parts;
     }
 
     /**
@@ -1588,7 +1716,15 @@ public class YAMLBuilder extends Path {
                 while (j < lines.size()) {
                     String nextLine = lines.get(j);
 
+                    // If we hit a blank line, only treat it as part of the block if it is indented
+                    // deeper than the base indent. Otherwise, it's a separator and ends the block.
                     if (nextLine.trim().isEmpty()) {
+                        int nextIndent = getIndent(nextLine);
+                        if (nextIndent <= baseIndent) {
+                            break; // separator line, not part of the block
+                        }
+
+                        // Still inside the block -> keep an empty line
                         blockLines.add("");
                         j++;
                         continue;
@@ -1596,6 +1732,7 @@ public class YAMLBuilder extends Path {
 
                     int nextIndent = getIndent(nextLine);
 
+                    // Block ends when indentation returns to base level or less
                     if (nextIndent <= baseIndent) {
                         break;
                     }
