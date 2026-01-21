@@ -69,6 +69,7 @@ public abstract class zAPI {
         logger.info("Initialized zAPI v" + VERSION + " using " + plugin.getName() + " v" + plugin.getPluginMeta().getVersion());
         //<editor-fold desc="bStats">
         try {
+            logger.info("Using the plugin '"+plugin.getPluginMeta().getName()+" v"+plugin.getPluginMeta().getVersion()+"' to create a bStats instance!");
             Metrics metrics = startMetrics(26888);
             metrics.addCustomChart(new DrilldownPie("parent_plugin", () -> {
                 Map<String, Map<String, Integer>> data = new HashMap<>();
@@ -79,7 +80,7 @@ public abstract class zAPI {
                 return data;
             }));
             metrics.addCustomChart(new SimplePie("zapi_version", () -> VERSION));
-            logger.info("Using the plugin '"+plugin.getPluginMeta().getName()+" v"+plugin.getPluginMeta().getVersion()+"' to create a bStats instance!");
+            metrics.addCustomChart(new SimplePie("use_nbtapi", () -> useNBTAPI ? "Yes" : "No"));
         }catch (Exception exception) {
             logger.warn("Failed to create a bStats instance.", exception);
         }
