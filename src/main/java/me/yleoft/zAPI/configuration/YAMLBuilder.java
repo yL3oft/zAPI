@@ -37,6 +37,11 @@ public class YAMLBuilder extends Path {
     private static final String VERSION_KEY = "config-version";
     private static final Pattern VERSION_PATTERN = Pattern.compile("^(\\d+)\\.(\\d)\\.(\\d{1,2})$");
 
+    private boolean migrateLegacyColors = false;
+
+    private static final Pattern AMP_HEX_PATTERN = Pattern.compile("(?i)&?#([0-9a-f]{6})");
+    private static final Pattern SPIGOT_HEX_PATTERN = Pattern.compile("(?i)&x(&[0-9a-f]){6}");
+
     /**
      * Creates a new YAMLBuilder with a parent directory and file name.
      * Smart parsing:  if fileName doesn't end with .yml or .yaml, .yml is appended.
@@ -103,6 +108,15 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder refresh() {
         loadCachedData();
         loadExistingVersion();
+        return this;
+    }
+
+    /**
+     * Enable/disable migrating legacy Minecraft color codes (& / §) to MiniMessage tags during build().
+     * This migrates BOTH defaults and any user-defined values loaded from disk.
+     */
+    public YAMLBuilder migrateLegacyColors(boolean enable) {
+        this.migrateLegacyColors = enable;
         return this;
     }
 
@@ -1319,6 +1333,11 @@ public class YAMLBuilder extends Path {
                 }
             }
 
+            // Convert legacy &/§ formatting codes to MiniMessage in ALL strings (including user-defined values)
+            if (migrateLegacyColors) {
+                convertLegacyColorsInObject(finalData);
+            }
+
             // Write the file
             writeYamlFile(finalData);
 
@@ -1356,6 +1375,80 @@ public class YAMLBuilder extends Path {
         if (lines.length <= 1) return s;
 
         return new MultiLineString(lines);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void convertLegacyColorsInObject(Object obj) {
+        if (obj instanceof Map<?, ?> map) {
+            // iterate over a snapshot to avoid concurrent modification issues
+            for (Map.Entry<?, ?> entry : new ArrayList<>(map.entrySet())) {
+                Object key = entry.getKey();
+                Object v = entry.getValue();
+
+                if (v instanceof String s) {
+                    ((Map<Object, Object>) map).put(key, legacyToMiniMessage(s));
+                } else if (v instanceof MultiLineString mls) {
+                    String[] out = new String[mls.lines.length];
+                    for (int i = 0; i < mls.lines.length; i++) out[i] = legacyToMiniMessage(mls.lines[i]);
+                    ((Map<Object, Object>) map).put(key, new MultiLineString(out));
+                } else if (v instanceof List<?> list) {
+                    List<Object> newList = new ArrayList<>(list.size());
+                    for (Object item : list) {
+                        if (item instanceof String sItem) newList.add(legacyToMiniMessage(sItem));
+                        else newList.add(item);
+                    }
+                    ((Map<Object, Object>) map).put(key, newList);
+                } else {
+                    convertLegacyColorsInObject(v);
+                }
+            }
+        }
+    }
+
+    private String legacyToMiniMessage(String input) {
+        if (input == null || input.isEmpty()) return input;
+
+        // normalize § to &
+        String s = input.replace('§', '&');
+
+        // &#RRGGBB or #RRGGBB -> <#RRGGBB>
+        s = AMP_HEX_PATTERN.matcher(s).replaceAll("<#$1>");
+
+        // &x&F&F&0&0&0&0 -> <#FF0000>
+        Matcher m = SPIGOT_HEX_PATTERN.matcher(s);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            String token = m.group();
+            String hex = token.replace("&x", "").replace("&", "");
+            m.appendReplacement(sb, "<#" + hex + ">");
+        }
+        m.appendTail(sb);
+        s = sb.toString();
+
+        // legacy colors + formats -> MiniMessage tags
+        return s
+                .replace("&0", "<black>")
+                .replace("&1", "<dark_blue>")
+                .replace("&2", "<dark_green>")
+                .replace("&3", "<dark_aqua>")
+                .replace("&4", "<dark_red>")
+                .replace("&5", "<dark_purple>")
+                .replace("&6", "<gold>")
+                .replace("&7", "<gray>")
+                .replace("&8", "<dark_gray>")
+                .replace("&9", "<blue>")
+                .replace("&a", "<green>")
+                .replace("&b", "<aqua>")
+                .replace("&c", "<red>")
+                .replace("&d", "<light_purple>")
+                .replace("&e", "<yellow>")
+                .replace("&f", "<white>")
+                .replace("&k", "<obfuscated>")
+                .replace("&l", "<bold>")
+                .replace("&m", "<strikethrough>")
+                .replace("&n", "<underlined>")
+                .replace("&o", "<italic>")
+                .replace("&r", "<reset>");
     }
 
     /**
