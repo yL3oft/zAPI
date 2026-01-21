@@ -26,6 +26,8 @@ Releases & artifacts: https://github.com/yL3oft/zAPI/releases
 
 ## Installation (Repository)
 Add the CodeMC repository to your build system:
+
+Maven
 ```xml
 <repositories>
     <repository>
@@ -33,6 +35,13 @@ Add the CodeMC repository to your build system:
         <url>https://repo.codemc.io/repository/yl3oft/</url>
     </repository>
 </repositories>
+```
+
+Gradle (Kotlin DSL)
+```kotlin
+repositories {
+    maven("https://repo.codemc.io/repository/yl3oft/")
+}
 ```
 
 ## Dependency (use latest release)
@@ -52,10 +61,6 @@ Maven
 
 Gradle (Kotlin DSL)
 ```kotlin
-repositories {
-    maven("https://repo.codemc.io/repository/yl3oft/")
-}
-
 dependencies {
     implementation("me.yleoft:zAPI:2.0.0")
 }
