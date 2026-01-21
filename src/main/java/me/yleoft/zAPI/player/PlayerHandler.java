@@ -101,7 +101,7 @@ public final class PlayerHandler {
                 String numberStr = matcher.group(1);
                 double chance = Double.parseDouble(numberStr);
                 if(chance < 0 || chance > 100) {
-                    zAPI.getPlugin().getLogger().warning("Invalid chance value: " + chance + " in command: " + command);
+                    zAPI.getLogger().warn("Invalid chance value: " + chance + " in command: " + command + ". It must be between 0 and 100.");
                     return;
                 }
                 if (Math.random() * 100 > chance) {

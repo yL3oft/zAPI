@@ -24,14 +24,14 @@ public class FileLogger {
     public FileLogger(File folder, String name) {
         if (!folder.exists()) {
             if (!folder.mkdirs()) {
-                zAPI.getPlugin().getLogger().severe("Failed to create folder: " + folder.getAbsolutePath());
+                zAPI.getLogger().warn("Failed to create folder: " + folder.getAbsolutePath());
             }
         }
         this.logFile = new File(folder, name + ".log");
         if (!logFile.exists()) {
             try {
                 if (!logFile.createNewFile()) {
-                    zAPI.getPlugin().getLogger().severe("Failed to create log file: " + logFile.getAbsolutePath());
+                    zAPI.getLogger().warn("Failed to create log file: " + logFile.getAbsolutePath());
                 }
             } catch (IOException e) {
                 throw new RuntimeException("Failed to create log file: " + logFile.getAbsolutePath(), e);
@@ -52,7 +52,7 @@ public class FileLogger {
             writer.write(formattedMessage);
             writer.newLine();
         } catch (IOException e) {
-            e.printStackTrace();
+            zAPI.getLogger().warn("Failed to write to log file: " + logFile.getAbsolutePath(), e);
         }
     }
 
@@ -73,7 +73,7 @@ public class FileLogger {
             return null;
         }
         if (!folder.exists() && !folder.mkdirs()) {
-            zAPI.getPlugin().getLogger().severe("Failed to create folder: " + folder.getAbsolutePath());
+            zAPI.getLogger().warn("Failed to create folder: " + folder.getAbsolutePath());
         }
         String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm").format(new Date());
         File compressedFile = new File(folder, timestamp + ".zip");
@@ -95,12 +95,13 @@ public class FileLogger {
                     zos.closeEntry();
                 }
                 if (!file.delete()) {
-                    zAPI.getPlugin().getLogger().warning("Could not delete log file: " + file.getAbsolutePath());
+                    zAPI.getLogger().warn("Could not delete log file: " + file.getAbsolutePath());
                 }
             }
 
         } catch (IOException e) {
-            throw new RuntimeException("Unable to compress logs", e);
+            zAPI.getLogger().warn("Failed to compress log files.", e);
+            return null;
         }
 
         return compressedFile;

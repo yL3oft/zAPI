@@ -3,6 +3,7 @@ package me.yleoft.zAPI.update;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import me.yleoft.zAPI.zAPI;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -49,11 +50,11 @@ public class UpdateManager {
             JsonArray json = (JsonArray) new JsonParser().parse(jsonString);
             JsonObject item = (JsonObject) json.get(0);
             return item.get("name").toString().replace("\"", "");
-        }catch (Exception e) {
-            plugin.getLogger().severe("[zAPI] Failed to retrieve the latest version from " + url);
+        }catch (Exception exception) {
+            zAPI.getLogger().warn("Failed to retrieve the latest version from " + url, exception);
         }
 
-        return plugin.getDescription().getVersion();
+        return plugin.getPluginMeta().getVersion();
     }
 
     /**
@@ -92,13 +93,15 @@ public class UpdateManager {
             File file = locateJarInPlugins(plugin).toFile();
             file.delete();
             File directory = plugin.getDataFolder().getParentFile();
-            String pluginName = plugin.getDescription().getName();
+            String pluginName = plugin.getPluginMeta().getName();
 
             String path = directory+"/"+pluginName+"-"+getVersion()+".jar";
             File newFile = new File(path);
             downloadFile(newFile, ModrinthDownloader.getLatestDownloadUrl(id));
             return path;
-        } catch (Exception ignored) {}
+        } catch (Exception exception) {
+            zAPI.getLogger().warn("Failed to update the plugin " + plugin.getPluginMeta().getName(), exception);
+        }
         return "ERROR";
     }
 
@@ -133,9 +136,9 @@ public class UpdateManager {
      */
     public static Path locateJarInPlugins(@NotNull JavaPlugin plugin) {
         Path pluginsDir = plugin.getDataFolder().getParentFile().toPath();
-        String myMain = plugin.getDescription().getMain();
-        String myName = plugin.getDescription().getName();
-        String myVersion = plugin.getDescription().getVersion();
+        String myMain = plugin.getPluginMeta().getMainClass();
+        String myName = plugin.getPluginMeta().getName();
+        String myVersion = plugin.getPluginMeta().getVersion();
 
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(pluginsDir, "*.jar")) {
             for (Path jarPath : stream) {

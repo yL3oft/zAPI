@@ -137,7 +137,7 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
         } catch (NoSuchMethodException ignored) {
             // Server version doesn't support syncCommands
         } catch (ReflectiveOperationException e) {
-            zAPI.getPlugin().getLogger().log(Level.WARNING, "Failed to sync commands", e);
+            zAPI.getLogger().warn("Failed to sync commands", e);
         }
     }
 
@@ -268,7 +268,7 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
             });
 
         } catch (Exception e) {
-            zAPI.getPlugin().getLogger().log(Level.WARNING, "Error unregistering command: " + commandName, e);
+            zAPI.getLogger().warn("Error unregistering command: " + commandName, e);
         }
     }
 

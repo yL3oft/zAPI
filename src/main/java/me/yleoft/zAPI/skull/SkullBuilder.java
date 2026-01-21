@@ -133,7 +133,7 @@ public abstract class SkullBuilder {
             profileField.setAccessible(true);
             profileField.set(headMeta, profile);
         } catch (final NoSuchFieldException | IllegalArgumentException | IllegalAccessException exception) {
-            zAPI.getPlugin().getLogger().severe("[zAPI] Failed to set profile for head: " + exception.getMessage());
+            zAPI.getLogger().warn("Failed to set profile for head: " + base64Url, exception);
         }
         head.setItemMeta(headMeta);
         return head;
@@ -170,7 +170,7 @@ public abstract class SkullBuilder {
         try {
             textures.setSkin(new URL(decodedBase64));
         } catch (final MalformedURLException exception) {
-            zAPI.getPlugin().getLogger().severe("[zAPI] Failed to set skin URL for player profile: " + exception.getMessage());
+            zAPI.getLogger().warn("Failed to set skin URL for player profile: " + base64Url, exception);
         }
 
         profile.setTextures(textures);

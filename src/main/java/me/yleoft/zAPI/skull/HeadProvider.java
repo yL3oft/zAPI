@@ -60,7 +60,7 @@ public abstract class HeadProvider {
         try {
             return cacheName.computeIfAbsent(playerName, SkullBuilder::getSkullByName).clone();
         } catch (Exception exception) {
-            zAPI.getPlugin().getLogger().severe("[zAPI] Failed to get head for player: " + playerName);
+            zAPI.getLogger().warn("Failed to get head for player: " + playerName, exception);
         }
         return SkullBuilder.originalHead.clone();
     }
@@ -76,7 +76,7 @@ public abstract class HeadProvider {
         try {
             return cacheBase64.computeIfAbsent(base64Url, SkullBuilder::getSkullByBase64EncodedTextureUrl).clone();
         } catch (Exception exception) {
-            zAPI.getPlugin().getLogger().severe("[zAPI] Failed to get head for base64: " + base64Url);
+            zAPI.getLogger().warn("Failed to get head for base64: " + base64Url, exception);
         }
         return SkullBuilder.originalHead.clone();
     }
