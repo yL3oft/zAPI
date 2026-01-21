@@ -594,11 +594,8 @@ public class YAMLBuilder extends Path {
      * Internal method to get a value, checking cached data, then defaults.
      */
     private Object getValue(String path) {
-        // First check cached/existing data
         Object value = getValueFromPath(cachedData, path);
         if (value != null) return value;
-
-        // Then check defaults
         return defaults.get(path);
     }
 
@@ -615,7 +612,6 @@ public class YAMLBuilder extends Path {
         if (value instanceof Map) {
             return new YAMLSection(this, path, (Map<String, Object>) value);
         }
-        // Also check cached data directly for sections not in defaults
         if (cachedData != null) {
             Object cached = getValueFromPath(cachedData, path);
             if (cached instanceof Map) {
@@ -746,7 +742,16 @@ public class YAMLBuilder extends Path {
      * @return This YAMLBuilder for chaining
      */
     public YAMLBuilder header(String... lines) {
-        this.header = lines;
+        if (lines == null) {
+            this.header = null;
+            return this;
+        }
+
+        if (lines.length == 1 && isTextBox(lines[0])) {
+            this.header = splitLinesPreserveEmpty(lines[0]);
+        } else {
+            this.header = lines;
+        }
         return this;
     }
 
@@ -758,8 +763,17 @@ public class YAMLBuilder extends Path {
      * @param lines The footer lines
      * @return This YAMLBuilder for chaining
      */
-    public YAMLBuilder footer(String...lines) {
-        this.footer = lines;
+    public YAMLBuilder footer(String... lines) {
+        if (lines == null) {
+            this.footer = null;
+            return this;
+        }
+
+        if (lines.length == 1 && isTextBox(lines[0])) {
+            this.footer = splitLinesPreserveEmpty(lines[0]);
+        } else {
+            this.footer = lines;
+        }
         return this;
     }
 
@@ -770,8 +784,12 @@ public class YAMLBuilder extends Path {
      * @param comments  The comment lines
      * @return This YAMLBuilder for chaining
      */
-    public YAMLBuilder comment(boolean highlight, String...comments) {
-        this.nextComment = comments;
+    public YAMLBuilder comment(boolean highlight, String... comments) {
+        if (comments != null && comments.length == 1 && isTextBox(comments[0])) {
+            this.nextComment = splitLinesPreserveEmpty(comments[0]);
+        } else {
+            this.nextComment = comments;
+        }
         this.nextCommentHighlight = highlight;
         return this;
     }
@@ -793,8 +811,12 @@ public class YAMLBuilder extends Path {
      * @param comments The comment lines
      * @return This YAMLBuilder for chaining
      */
-    public YAMLBuilder commentSection(String section, String...comments) {
-        sectionComments.put(section, comments);
+    public YAMLBuilder commentSection(String section, String... comments) {
+        if (comments != null && comments.length == 1 && isTextBox(comments[0])) {
+            sectionComments.put(section, splitLinesPreserveEmpty(comments[0]));
+        } else {
+            sectionComments.put(section, comments);
+        }
         return this;
     }
 
@@ -804,7 +826,7 @@ public class YAMLBuilder extends Path {
      * Adds a default String value.
      */
     public YAMLBuilder addDefault(String path, String value) {
-        defaults.put(path, value);
+        defaults.put(path, toYamlStringValue(value));
         applyPendingComment(path);
         return this;
     }
@@ -917,7 +939,7 @@ public class YAMLBuilder extends Path {
      * Sets a value (non-default - only written if file is being generated).
      */
     public YAMLBuilder setValue(String path, String value) {
-        values.put(path, value);
+        values.put(path, toYamlStringValue(value));
         applyPendingComment(path);
         return this;
     }
@@ -1309,6 +1331,33 @@ public class YAMLBuilder extends Path {
         return this;
     }
 
+    private static boolean isTextBox(String s) {
+        return s != null && (s.contains("\n") || s.contains("\r"));
+    }
+
+    private static String[] splitLinesPreserveEmpty(String s) {
+        // -1 keeps trailing empty lines if present
+        return s.stripTrailing().split("\\R", -1);
+    }
+
+    /**
+     * Converts a String to a YAML-compatible value.
+     * If the string contains newlines, it is converted to a MultiLineString.
+     *
+     * @param s The input string
+     * @return The original string or a MultiLineString for multi-line content
+     */
+    private static Object toYamlStringValue(String s) {
+        if (s == null) return null;
+        if (!isTextBox(s)) return s;
+
+        String[] lines = splitLinesPreserveEmpty(s);
+        // If it ended up as 1 line anyway, keep it scalar
+        if (lines.length <= 1) return s;
+
+        return new MultiLineString(lines);
+    }
+
     /**
      * Recursively copies all values from source to destination map.
      * This preserves user-added values that aren't in defaults.
@@ -1419,57 +1468,57 @@ public class YAMLBuilder extends Path {
             String fullPath = buildFullPathFromStack(pathStack);
 
             if (valueStr.isEmpty()) {
-                // Could be a section OR a list starting next line
-                currentListPath = fullPath;
-                currentList = new ArrayList<>();
+                String next = nextMeaningfulLine(lines, i + 1);
+
+                if (next != null) {
+                    int nextIndent = getIndent(next);
+                    String nextTrimmed = next.trim();
+
+                    if (nextIndent > indent && nextTrimmed.startsWith("- ")) {
+                        // It's a list
+                        currentListPath = fullPath;
+                        currentList = new ArrayList<>();
+                    }
+                }
+
                 continue;
             }
 
-            // --- NEW: handle block scalars (multi-line strings) ---
             if (valueStr.equals("|")) {
-                // Collect block lines that are more indented than this key line
                 int baseIndent = indent;
 
                 List<String> blockLines = new ArrayList<>();
                 int j = i + 1;
 
-                // Determine block indentation from first non-empty/non-comment line if present
                 Integer blockIndent = null;
 
                 while (j < lines.size()) {
                     String nextLine = lines.get(j);
 
-                    // Always allow blank lines inside block (YAML keeps them)
                     if (nextLine.trim().isEmpty()) {
                         blockLines.add("");
                         j++;
                         continue;
                     }
 
-                    // Comments inside a block scalar are content in YAML if indented;
-                    // but your writer never emits indented comments inside '|', so we can treat them as content.
                     int nextIndent = getIndent(nextLine);
 
-                    // Block ends when indentation returns to baseIndent or less
                     if (nextIndent <= baseIndent) {
                         break;
                     }
 
                     if (blockIndent == null) {
-                        blockIndent = nextIndent; // first content line defines indentation level
+                        blockIndent = nextIndent;
                     }
 
-                    // Strip the blockIndent from the line (not baseIndent)
                     blockLines.add(stripIndent(nextLine, blockIndent));
                     j++;
                 }
 
-                // If there were no content lines, treat as empty string
                 Object value;
                 if (blockLines.isEmpty()) {
                     value = "";
                 } else {
-                    // Store as MultiLineString so your writer outputs '|'
                     value = new MultiLineString(blockLines.toArray(new String[0]));
                 }
 
@@ -1479,12 +1528,10 @@ public class YAMLBuilder extends Path {
                 pathStack.pop();
                 indentStack.pop();
 
-                // Skip consumed lines
                 i = j - 1;
                 continue;
             }
 
-            // Normal scalar
             Object value = parseValue(valueStr);
             setValueAtPath(data, fullPath, value);
 
@@ -1493,14 +1540,12 @@ public class YAMLBuilder extends Path {
             indentStack.pop();
         }
 
-        // Handle any remaining list
         if (currentListPath != null && currentList != null && !currentList.isEmpty()) {
             setValueAtPath(data, currentListPath, currentList);
         }
     }
 
     private String buildFullPathFromStack(Deque<String> pathStack) {
-        // pathStack is LIFO (top is most recent), so build reversed order
         String[] parts = pathStack.toArray(new String[0]);
         StringBuilder reversedPath = new StringBuilder();
         for (int i = parts.length - 1; i >= 0; i--) {
@@ -1528,7 +1573,6 @@ public class YAMLBuilder extends Path {
             }
         }
 
-        // If the line had less indent than expected, return trimmed fallback
         return idx <= line.length() ? line.substring(idx) : line.trim();
     }
 
@@ -1664,6 +1708,19 @@ public class YAMLBuilder extends Path {
     }
 
     /**
+     * Finds the next meaningful line (non-empty, non-comment) from a list of lines.
+     */
+    private static String nextMeaningfulLine(List<String> lines, int startIndex) {
+        for (int i = startIndex; i < lines.size(); i++) {
+            String l = lines.get(i);
+            String t = l.trim();
+            if (t.isEmpty() || t.startsWith("#")) continue;
+            return l;
+        }
+        return null;
+    }
+
+    /**
      * Writes the YAML file with proper formatting.
      */
     private void writeYamlFile(Map<String, Object> data) throws IOException {
@@ -1674,6 +1731,8 @@ public class YAMLBuilder extends Path {
             for (String line : header) {
                 if (line.isEmpty()) {
                     sb.append("\n");
+                } else if (line.startsWith("#")) {
+                    sb.append(line).append("\n");
                 } else {
                     sb.append("# ").append(line).append("\n");
                 }
@@ -1692,7 +1751,7 @@ public class YAMLBuilder extends Path {
             sb.append("\n");
             for (String line : footer) {
                 if (line.isEmpty()) {
-                    sb.append("# ").append(line).append("\n");
+                    sb.append("\n");
                 } else {
                     sb.append("# ").append(line).append("\n");
                 }
@@ -1741,13 +1800,19 @@ public class YAMLBuilder extends Path {
                 }
             }
 
-            // Check for pending comment on this path
             if (pendingComments.containsKey(fullPath)) {
                 String[] comments = pendingComments.get(fullPath);
 
-                // Add blank line before commented item
-                if (sb.length() > 0 && !sb.toString().endsWith("\n\n")) {
-                    sb.append("\n");
+                boolean highlight = Boolean.TRUE.equals(commentHighlight.get(fullPath));
+
+                if (sb.length() > 0) {
+                    if (!sb.toString().endsWith("\n")) {
+                        sb.append("\n");
+                    }
+
+                    if (highlight && !sb.toString().endsWith("\n\n")) {
+                        sb.append("\n");
+                    }
                 }
 
                 for (String comment : comments) {
@@ -1758,14 +1823,17 @@ public class YAMLBuilder extends Path {
             if (value instanceof Map) {
                 sb.append(indentStr).append(key).append(":\n");
                 writeMap(sb, (Map<String, Object>) value, indent + 1, fullPath, currentTopSection, writtenPaths);
-            } else if (value instanceof List) {
+            } else if (value instanceof List<?> list) {
                 sb.append(indentStr).append(key).append(":\n");
-                List<? > list = (List<?>) value;
+                String listIndentStr = repeat("  ", indent + 1);
+
                 for (Object item : list) {
-                    sb.append(indentStr).append("- \"").append(escapeString(item.toString())).append("\"\n");
+                    sb.append(listIndentStr)
+                            .append("- \"")
+                            .append(escapeString(item.toString()))
+                            .append("\"\n");
                 }
-            } else if (value instanceof MultiLineString) {
-                MultiLineString mls = (MultiLineString) value;
+            } else if (value instanceof MultiLineString mls) {
                 sb.append(indentStr).append(key).append(": |\n");
                 for (String line : mls.lines) {
                     sb.append(indentStr).append("  ").append(line).append("\n");
@@ -1819,14 +1887,9 @@ public class YAMLBuilder extends Path {
     }
 
     /**
-     * Inner class to represent multi-line strings.
-     */
-    private static class MultiLineString {
-        final String[] lines;
-
-        MultiLineString(String[] lines) {
-            this.lines = lines;
-        }
+         * Inner class to represent multi-line strings.
+         */
+        private record MultiLineString(String[] lines) {
     }
 
     public static class YAMLSection {
@@ -1989,7 +2052,6 @@ public class YAMLBuilder extends Path {
             if (value instanceof Map) {
                 return new YAMLSection(parent, getFullPath(path), (Map<String, Object>) value);
             }
-            // Try through parent for deeper paths
             return parent.getConfigurationSection(getFullPath(path));
         }
 
