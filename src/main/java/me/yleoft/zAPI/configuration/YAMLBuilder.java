@@ -958,6 +958,15 @@ public class YAMLBuilder extends Path {
         return this;
     }
 
+    public YAMLBuilder setValue(String path, String... values) {
+        if (values.length == 1) {
+            return setValue(path, values[0]);
+        }
+        this.values.put(path, new MultiLineString(values));
+        applyPendingComment(path);
+        return this;
+    }
+
     /**
      * Sets a value (non-default - only written if file is being generated).
      */
@@ -1402,6 +1411,8 @@ public class YAMLBuilder extends Path {
      */
     public YAMLBuilder build() {
         try {
+            boolean firstTimeGenerate = ! file.exists();
+
             // Ensure parent directories exist
             if (file.getParentFile() != null && !file.getParentFile().exists()) {
                 file.getParentFile().mkdirs();
@@ -1418,18 +1429,26 @@ public class YAMLBuilder extends Path {
                 copyAllValues(cachedData, finalData, "");
             }
 
-            // Then add defaults where values don't exist
-            for (Map.Entry<String, Object> entry : defaults.entrySet()) {
+            // Combine defaults and values in declaration order
+            // We need to maintain the order in which paths were declared
+            Map<String, Object> allEntries = new LinkedHashMap<>();
+            allEntries.putAll(defaults);
+
+            if (firstTimeGenerate) {
+                // For first-time generation, merge values into allEntries
+                // We need to insert values at the correct position relative to defaults
+                allEntries = mergeInDeclarationOrder(defaults, values);
+            }
+
+            // Now add them all in order
+            for (Map.Entry<String, Object> entry : allEntries.entrySet()) {
                 String path = entry.getKey();
 
-                // Skip voided paths
                 if (isVoided(path)) continue;
 
                 Object existingValue = getValueFromPath(finalData, path);
-
-                // Only set default if no existing value
                 if (existingValue == null) {
-                    setValueAtPath(finalData, path, entry.getValue());
+                    setValueAtPathOrdered(finalData, path, entry.getValue(), allEntries);
                 }
             }
 
@@ -1438,33 +1457,169 @@ public class YAMLBuilder extends Path {
                 removeValueFromPath(finalData, voidedPath);
             }
 
-            // Add setValue entries only if path doesn't exist
-            for (Map.Entry<String, Object> entry : values.entrySet()) {
-                String path = entry.getKey();
-
-                // Skip voided paths
-                if (isVoided(path)) continue;
-
-                if (getValueFromPath(finalData, path) == null) {
-                    setValueAtPath(finalData, path, entry.getValue());
-                }
-            }
-
-            // Convert legacy &/§ formatting codes to MiniMessage in ALL strings (including user-defined values)
             if (migrateLegacyColors) {
                 convertLegacyColorsInObject(finalData);
             }
 
-            // Write the file
             writeYamlFile(finalData);
 
-            // Refresh cached data after build
             loadCachedData();
 
         } catch (Exception e) {
             e.printStackTrace();
         }
         return this;
+    }
+
+    /**
+     * Merges defaults and values maps while preserving declaration order.
+     * Values are inserted at positions that maintain proper YAML structure.
+     */
+    private Map<String, Object> mergeInDeclarationOrder(Map<String, Object> defaults, Map<String, Object> values) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        Set<String> processedValues = new HashSet<>();
+
+        for (Map.Entry<String, Object> defaultEntry : defaults.entrySet()) {
+            String defaultPath = defaultEntry.getKey();
+
+            // Before adding this default, check if there are any values that should come before it
+            // (values that share the same parent but weren't in defaults before this point)
+            String defaultParent = getParentPath(defaultPath);
+
+            for (Map.Entry<String, Object> valueEntry : values.entrySet()) {
+                String valuePath = valueEntry.getKey();
+                if (processedValues.contains(valuePath)) continue;
+
+                String valueParent = getParentPath(valuePath);
+
+                // If this value has the same parent as the current default,
+                // and this value's key comes before any nested sections in the default
+                if (valueParent.equals(defaultParent) && shouldInsertValueBefore(valuePath, defaultPath, defaults)) {
+                    result.put(valuePath, valueEntry.getValue());
+                    processedValues.add(valuePath);
+                }
+            }
+
+            result.put(defaultPath, defaultEntry.getValue());
+        }
+
+        // Add any remaining values that weren't processed
+        for (Map.Entry<String, Object> valueEntry : values.entrySet()) {
+            if (!processedValues.contains(valueEntry.getKey()) && !isVoided(valueEntry.getKey())) {
+                result.put(valueEntry.getKey(), valueEntry.getValue());
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Determines if a value path should be inserted before a default path.
+     * This happens when the value is a sibling scalar and the default starts a nested section.
+     */
+    private boolean shouldInsertValueBefore(String valuePath, String defaultPath, Map<String, Object> defaults) {
+        String valueParent = getParentPath(valuePath);
+        String defaultParent = getParentPath(defaultPath);
+
+        // Only consider if they share the same parent
+        if (!valueParent.equals(defaultParent)) {
+            return false;
+        }
+
+        // Check if the defaultPath starts a nested section (has children in defaults)
+        String defaultPathPrefix = defaultPath + ".";
+        for (String key : defaults.keySet()) {
+            if (key.startsWith(defaultPathPrefix)) {
+                // defaultPath is a section, value should come before if it's a scalar sibling
+                // that would logically appear before nested sections
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Gets the parent path of a dotted path.
+     */
+    private String getParentPath(String path) {
+        int lastDot = path.lastIndexOf('.');
+        return lastDot > 0 ? path.substring(0, lastDot) : "";
+    }
+
+    /**
+     * Sets a value at a path while maintaining proper key ordering within each level.
+     * This ensures that keys are inserted in the order they appear in allEntries.
+     */
+    @SuppressWarnings("unchecked")
+    private void setValueAtPathOrdered(Map<String, Object> data, String path, Object value, Map<String, Object> allEntries) {
+        String[] parts = path.split("\\.");
+        Map<String, Object> current = data;
+
+        for (int i = 0; i < parts.length - 1; i++) {
+            String part = parts[i];
+            if (! current.containsKey(part) || !(current.get(part) instanceof Map)) {
+                current.put(part, new LinkedHashMap<String, Object>());
+            }
+            current = (Map<String, Object>) current.get(part);
+        }
+
+        String finalKey = parts[parts.length - 1];
+
+        // If the key already exists, just update it
+        if (current.containsKey(finalKey)) {
+            current.put(finalKey, value);
+            return;
+        }
+
+        // Otherwise, we need to insert it in the correct order
+        // Find all sibling paths and determine the correct insertion order
+        String parentPath = getParentPath(path);
+        List<String> siblingOrder = new ArrayList<>();
+
+        for (String entryPath : allEntries.keySet()) {
+            String entryParent = getParentPath(entryPath);
+            if (entryParent.equals(parentPath)) {
+                String siblingKey = entryPath.substring(parentPath.isEmpty() ? 0 : parentPath.length() + 1);
+                if (siblingKey.contains(".")) {
+                    siblingKey = siblingKey.substring(0, siblingKey.indexOf('.'));
+                }
+                if (!siblingOrder.contains(siblingKey)) {
+                    siblingOrder.add(siblingKey);
+                }
+            }
+        }
+
+        // Rebuild the map in the correct order
+        Map<String, Object> reordered = new LinkedHashMap<>();
+        Set<String> existingKeys = new LinkedHashSet<>(current.keySet());
+        existingKeys.add(finalKey);
+
+        // First add keys in the order they appear in siblingOrder
+        for (String orderedKey : siblingOrder) {
+            if (existingKeys.contains(orderedKey)) {
+                if (orderedKey.equals(finalKey)) {
+                    reordered.put(finalKey, value);
+                } else if (current.containsKey(orderedKey)) {
+                    reordered.put(orderedKey, current.get(orderedKey));
+                }
+            }
+        }
+
+        // Then add any remaining keys that weren't in siblingOrder
+        for (String existingKey : existingKeys) {
+            if (!reordered.containsKey(existingKey)) {
+                if (existingKey.equals(finalKey)) {
+                    reordered.put(finalKey, value);
+                } else if (current.containsKey(existingKey)) {
+                    reordered.put(existingKey, current.get(existingKey));
+                }
+            }
+        }
+
+        // Replace the contents of current with reordered
+        current.clear();
+        current.putAll(reordered);
     }
 
     private static boolean isTextBox(String s) {
@@ -1695,13 +1850,19 @@ public class YAMLBuilder extends Path {
                     int nextIndent = getIndent(next);
                     String nextTrimmed = next.trim();
 
-                    if (nextIndent > indent && nextTrimmed.startsWith("- ")) {
-                        // It's a list
-                        currentListPath = fullPath;
-                        currentList = new ArrayList<>();
+                    if (nextIndent > indent) {
+                        // It's a real section (or a list section).Keep it on the stack.
+                        if (nextTrimmed.startsWith("- ")) {
+                            currentListPath = fullPath;
+                            currentList = new ArrayList<>();
+                        }
+                        continue;
                     }
                 }
 
+                // Not actually a section with children -> undo the push
+                pathStack.pop();
+                indentStack.pop();
                 continue;
             }
 
@@ -1717,7 +1878,7 @@ public class YAMLBuilder extends Path {
                     String nextLine = lines.get(j);
 
                     // If we hit a blank line, only treat it as part of the block if it is indented
-                    // deeper than the base indent. Otherwise, it's a separator and ends the block.
+                    // deeper than the base indent.Otherwise, it's a separator and ends the block.
                     if (nextLine.trim().isEmpty()) {
                         int nextIndent = getIndent(nextLine);
                         if (nextIndent <= baseIndent) {
@@ -2117,9 +2278,9 @@ public class YAMLBuilder extends Path {
     }
 
     /**
-         * Inner class to represent multi-line strings.
-         */
-        private record MultiLineString(String[] lines) {
+     * Inner class to represent multi-line strings.
+     */
+    private record MultiLineString(String[] lines) {
     }
 
     public static class YAMLSection {

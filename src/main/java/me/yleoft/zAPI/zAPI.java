@@ -1,5 +1,6 @@
 package me.yleoft.zAPI;
 
+import me.yleoft.zAPI.hooks.HookRegistry;
 import me.yleoft.zAPI.listeners.DupeFixerListeners;
 import me.yleoft.zAPI.listeners.ItemListeners;
 import me.yleoft.zAPI.logging.FileLogger;
@@ -49,8 +50,15 @@ public abstract class zAPI {
 
     private static JavaPlugin plugin;
     private static Logger logger;
+    private static Logger pluginLogger;
     private static final MiniMessage miniMessage = MiniMessage.miniMessage();
     public static boolean useNBTAPI = false;
+
+    public static void preload(@NotNull JavaPlugin plugin) {
+        zAPI.plugin = plugin;
+        zAPI.logger = new Logger("[zAPI]");
+        HookRegistry.preload();
+    }
 
     /**
      * Initializes zAPI with the given JavaPlugin instance.
@@ -59,13 +67,19 @@ public abstract class zAPI {
      * @param useNBTAPI A boolean indicating whether to use NBTAPI features.
      */
     public static void init(@NotNull JavaPlugin plugin, boolean useNBTAPI) {
-        zAPI.plugin = plugin;
-        zAPI.logger = new Logger("[zAPI]");
+        if(zAPI.plugin != null && zAPI.plugin != plugin) {
+            throw new IllegalStateException("zAPI has already been initialized with a different plugin!");
+        }
+        if(zAPI.plugin == null) {
+            zAPI.plugin = plugin;
+            zAPI.logger = new Logger("[zAPI]");
+        }
         zAPI.useNBTAPI = useNBTAPI;
         if(useNBTAPI) {
             PluginYAML.registerEvent(new DupeFixerListeners());
             PluginYAML.registerEvent(new ItemListeners());
         }
+        HookRegistry.load();
         logger.info("Initialized zAPI v" + VERSION + " using " + plugin.getName() + " v" + plugin.getPluginMeta().getVersion());
         //<editor-fold desc="bStats">
         try {
@@ -133,6 +147,24 @@ public abstract class zAPI {
     @NotNull
     public static Logger getLogger() {
         return logger;
+    }
+
+    /**
+     * Retrieves the Logger instance used for plugin-specific logging.
+     *
+     * @return The {@link Logger} instance.
+     */
+    public static Logger getPluginLogger() {
+        return pluginLogger != null ? pluginLogger : logger;
+    }
+
+    /**
+     * Sets the Logger instance used for plugin-specific logging.
+     *
+     * @param logger The {@link Logger} instance to set.
+     */
+    public static void setPluginLogger(Logger logger) {
+        zAPI.pluginLogger = logger;
     }
 
     /**

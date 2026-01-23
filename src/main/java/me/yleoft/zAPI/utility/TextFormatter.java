@@ -1,6 +1,7 @@
 package me.yleoft.zAPI.utility;
 
 import me.clip.placeholderapi.PlaceholderAPI;
+import me.yleoft.zAPI.hooks.HookRegistry;
 import me.yleoft.zAPI.zAPI;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -16,7 +17,6 @@ public abstract class TextFormatter {
 
     private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
     private static final Pattern TIME_PATTERN = Pattern.compile("(\\d+)(y|mo|w|d|h|m|s)", Pattern.CASE_INSENSITIVE);
-    private static final boolean PAPI_AVAILABLE;
 
     private static final Map<String, Long> TIME_UNITS = Map.of(
             "y", 365L * 24 * 60 * 60 * 1000,
@@ -28,17 +28,6 @@ public abstract class TextFormatter {
             "s", 1000L
     );
     private static final String[] TIME_SUFFIXES = {"y", "mo", "w", "d", "h", "m", "s"};
-
-    // For unit tests
-    static {
-        boolean available;
-        try {
-            available = Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null;
-        } catch (NoClassDefFoundError | NullPointerException e) {
-            available = false;
-        }
-        PAPI_AVAILABLE = available;
-    }
 
     /**
      * Check if a string starts with a given prefix, ignoring case.
@@ -142,7 +131,7 @@ public abstract class TextFormatter {
      */
     @NotNull
     public static String applyPlaceholders(@Nullable final OfflinePlayer p, @NotNull String string) {
-        if (p != null && PAPI_AVAILABLE)
+        if (p != null && HookRegistry.PAPI.exists())
             string = PlaceholderAPI.setPlaceholders(p, string);
         return string;
     }
