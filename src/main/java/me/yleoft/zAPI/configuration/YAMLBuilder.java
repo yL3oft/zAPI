@@ -1968,6 +1968,14 @@ public class YAMLBuilder extends Path {
     private Object parseValue(String value) {
         value = value.trim();
 
+        // Strip inline comments (but be careful with quoted strings)
+        value = stripInlineComment(value);
+
+        // Handle inline empty array
+        if (value.equals("[]")) {
+            return new ArrayList<>();
+        }
+
         // Remove quotes
         value = unquote(value);
 
@@ -1986,6 +1994,59 @@ public class YAMLBuilder extends Path {
         if (value.equalsIgnoreCase("false")) return false;
 
         return value;
+    }
+
+    /**
+     * Strips inline comments from a YAML value, respecting quoted strings.
+     */
+    private String stripInlineComment(String value) {
+        if (value == null || value.isEmpty()) return value;
+
+        // Check if the value starts with a quote
+        char firstChar = value.charAt(0);
+        if (firstChar == '"' || firstChar == '\'') {
+            // Find the closing quote
+            int closeQuote = findClosingQuote(value, firstChar, 1);
+            if (closeQuote > 0) {
+                // Return just the quoted portion (including quotes, unquote will handle them)
+                return value.substring(0, closeQuote + 1);
+            }
+            // Malformed quote - return as is
+            return value;
+        }
+
+        // For unquoted values, find the first # that's preceded by whitespace
+        int commentIndex = -1;
+        for (int i = 1; i < value.length(); i++) {
+            if (value.charAt(i) == '#' && Character.isWhitespace(value.charAt(i - 1))) {
+                commentIndex = i;
+                break;
+            }
+        }
+
+        if (commentIndex > 0) {
+            return value.substring(0, commentIndex).trim();
+        }
+
+        return value;
+    }
+
+    /**
+     * Finds the closing quote in a string, handling escaped quotes.
+     */
+    private int findClosingQuote(String value, char quoteChar, int startIndex) {
+        for (int i = startIndex; i < value.length(); i++) {
+            char c = value.charAt(i);
+            if (c == '\\' && i + 1 < value.length()) {
+                // Skip escaped character
+                i++;
+                continue;
+            }
+            if (c == quoteChar) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -2210,17 +2271,18 @@ public class YAMLBuilder extends Path {
                 sb.append(indentStr).append(key).append(":\n");
                 writeMap(sb, (Map<String, Object>) value, indent + 1, fullPath, currentTopSection, writtenPaths);
             } else if (value instanceof List<?> list) {
-                sb.append(indentStr).append(key).append(":\n");
-                String listIndentStr = repeat("  ", indent + 1);
-
-                for (Object item : list) {
-                    sb.append(listIndentStr)
-                            .append("- \"")
-                            .append(escapeString(item.toString()))
-                            .append("\"\n");
+                if (list.isEmpty()) {
+                    sb.append(indentStr).append(key).append(": []\n");
+                } else {
+                    sb.append(indentStr).append(key).append(":\n");
+                    String listIndentStr = repeat("  ", indent + 1);
+                    for (Object item : list) {
+                        sb.append(listIndentStr)
+                                .append("- \"")
+                                .append(escapeString(item.toString()))
+                                .append("\"\n");
+                    }
                 }
-                // ... inside writeMap(...)
-
             } else if (value instanceof MultiLineString mls) {
                 sb.append(indentStr).append(key).append(": |-\n");
                 for (String line : mls.lines) {

@@ -51,14 +51,14 @@ public class Logger {
 
     public void debug(String message) {
         if (!debugMode) return;
-        logMultiline(message, (line) -> plugin.getComponentLogger().debug(line));
+        logMultiline(message, (line) -> plugin.getComponentLogger().info(line));
     }
 
     public void debug(String message, Throwable throwable) {
         if (!debugMode) return;
         logMultilineThrowable(message, throwable,
-                (line) -> plugin.getComponentLogger().debug(line),
-                (line, t) -> plugin.getComponentLogger().debug(line, t));
+                (line) -> plugin.getComponentLogger().info(line),
+                (line, t) -> plugin.getComponentLogger().info(line, t));
     }
 
     public void trace(String message) {
