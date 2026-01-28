@@ -852,7 +852,7 @@ public class YAMLBuilder extends Path {
         if (values.length == 1) {
             return addDefault(path, values[0]);
         }
-        defaults.put(path, new MultiLineString(values));
+        defaults.put(path, Arrays.stream(values).toList());
         applyPendingComment(path);
         return this;
     }
@@ -962,7 +962,7 @@ public class YAMLBuilder extends Path {
         if (values.length == 1) {
             return setValue(path, values[0]);
         }
-        this.values.put(path, new MultiLineString(values));
+        defaults.put(path, Arrays.stream(values).toList());
         applyPendingComment(path);
         return this;
     }
@@ -1866,7 +1866,7 @@ public class YAMLBuilder extends Path {
                 continue;
             }
 
-            if (valueStr.equals("|")) {
+            if (valueStr.equals("|") || valueStr.equals("|-")) {
                 int baseIndent = indent;
 
                 List<String> blockLines = new ArrayList<>();
@@ -1877,15 +1877,12 @@ public class YAMLBuilder extends Path {
                 while (j < lines.size()) {
                     String nextLine = lines.get(j);
 
-                    // If we hit a blank line, only treat it as part of the block if it is indented
-                    // deeper than the base indent.Otherwise, it's a separator and ends the block.
                     if (nextLine.trim().isEmpty()) {
                         int nextIndent = getIndent(nextLine);
                         if (nextIndent <= baseIndent) {
-                            break; // separator line, not part of the block
+                            break;
                         }
 
-                        // Still inside the block -> keep an empty line
                         blockLines.add("");
                         j++;
                         continue;
@@ -1893,7 +1890,6 @@ public class YAMLBuilder extends Path {
 
                     int nextIndent = getIndent(nextLine);
 
-                    // Block ends when indentation returns to base level or less
                     if (nextIndent <= baseIndent) {
                         break;
                     }
@@ -1915,7 +1911,6 @@ public class YAMLBuilder extends Path {
 
                 setValueAtPath(data, fullPath, value);
 
-                // IMPORTANT: pop because this key is done (same as scalar case)
                 pathStack.pop();
                 indentStack.pop();
 
@@ -2224,8 +2219,10 @@ public class YAMLBuilder extends Path {
                             .append(escapeString(item.toString()))
                             .append("\"\n");
                 }
+                // ... inside writeMap(...)
+
             } else if (value instanceof MultiLineString mls) {
-                sb.append(indentStr).append(key).append(": |\n");
+                sb.append(indentStr).append(key).append(": |-\n");
                 for (String line : mls.lines) {
                     sb.append(indentStr).append("  ").append(line).append("\n");
                 }

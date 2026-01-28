@@ -1,6 +1,7 @@
 package me.yleoft.zAPI.utility;
 
 import me.clip.placeholderapi.PlaceholderAPI;
+import me.yleoft.zAPI.configuration.Messages;
 import me.yleoft.zAPI.hooks.HookRegistry;
 import me.yleoft.zAPI.zAPI;
 import net.kyori.adventure.text.Component;
@@ -133,7 +134,8 @@ public abstract class TextFormatter {
     public static String applyPlaceholders(@Nullable final OfflinePlayer p, @NotNull String string) {
         if (p != null && HookRegistry.PAPI.exists())
             string = PlaceholderAPI.setPlaceholders(p, string);
-        return string;
+        string = string.replace("%prefix%", Messages.getPluginPrefix());
+        return zAPI.getPlaceholdersHandler().applyPlaceholders(p, string);
     }
 
     /**

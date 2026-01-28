@@ -13,14 +13,17 @@ public class HookRegistry {
 
     public static void preload() {
         try {
-            Hooks.clear();
-            Hooks.add(PAPI);
+            boolean debugMode = zAPI.getPluginLogger().isDebugMode();
+            zAPI.getPluginLogger().setDebugMode(true);
+            if(!Hooks.contains(PAPI)) {
+                Hooks.add(PAPI);
+            }
 
             Hooks.forEach(instance -> {
                 try {
                     instance.preload();
-                } catch (Exception exception) {
-                    zAPI.getPluginLogger().debug("Failed to preload hook: " + instance.getClass().getSimpleName(), exception);
+                } catch (NoClassDefFoundError | Exception exception) {
+                    zAPI.getPluginLogger().error("Failed to preload hook: " + instance.getClass().getSimpleName(), exception);
                 }
             });
 
@@ -28,22 +31,23 @@ public class HookRegistry {
                     .filter(HookInstance::exists)
                     .map(HookInstance::preloadMessage)
                     .forEach(zAPI.getPluginLogger()::info);
-        } catch (Exception exception) {
-            zAPI.getPluginLogger().debug("Unable to initialise hooks.", exception);
+            zAPI.getPluginLogger().setDebugMode(debugMode);
+        } catch (NoClassDefFoundError | Exception exception) {
+            zAPI.getPluginLogger().error("Unable to pre load hooks.", exception);
         }
     }
 
     public static void load() {
         try {
-            if(Hooks.isEmpty()) {
+            if(!Hooks.contains(PAPI)) {
                 Hooks.add(PAPI);
             }
 
             Hooks.forEach(instance -> {
                 try {
                     instance.load();
-                } catch (Exception exception) {
-                    zAPI.getPluginLogger().debug("Failed to load hook: " + instance.getClass().getSimpleName(), exception);
+                } catch (NoClassDefFoundError | Exception exception) {
+                    zAPI.getPluginLogger().error("Failed to load hook: " + instance.getClass().getSimpleName(), exception);
                 }
             });
 
@@ -52,12 +56,26 @@ public class HookRegistry {
                     .map(HookInstance::message)
                     .forEach(zAPI.getPluginLogger()::info);
         } catch (Exception exception) {
-            zAPI.getPluginLogger().debug("Unable to initialise hooks.", exception);
+            zAPI.getPluginLogger().error("Unable to initialise hooks.", exception);
         }
+    }
+
+    public static void unload() {
+        Hooks.forEach(instance -> {
+            try {
+                instance.unload();
+            } catch (Exception exception) {
+                zAPI.getPluginLogger().error("Failed to unload hook: " + instance.getClass().getSimpleName(), exception);
+            }
+        });
     }
 
     public static void registerHook(HookInstance hookInstance) {
         Hooks.add(hookInstance);
+    }
+
+    public static void clearHooks() {
+        Hooks.clear();
     }
 
 }

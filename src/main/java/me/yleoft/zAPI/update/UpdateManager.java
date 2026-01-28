@@ -3,6 +3,7 @@ package me.yleoft.zAPI.update;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import me.yleoft.zAPI.utility.Version;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -54,7 +55,7 @@ public class UpdateManager {
             zAPI.getLogger().warn("Failed to retrieve the latest version from " + url, exception);
         }
 
-        return plugin.getPluginMeta().getVersion();
+        return Version.getVersion();
     }
 
     /**
@@ -93,14 +94,14 @@ public class UpdateManager {
             File file = locateJarInPlugins(plugin).toFile();
             file.delete();
             File directory = plugin.getDataFolder().getParentFile();
-            String pluginName = plugin.getPluginMeta().getName();
+            String pluginName = Version.getName();
 
             String path = directory+"/"+pluginName+"-"+getVersion()+".jar";
             File newFile = new File(path);
             downloadFile(newFile, ModrinthDownloader.getLatestDownloadUrl(id));
             return path;
         } catch (Exception exception) {
-            zAPI.getLogger().warn("Failed to update the plugin " + plugin.getPluginMeta().getName(), exception);
+            zAPI.getLogger().warn("Failed to update the plugin " + Version.getName(), exception);
         }
         return "ERROR";
     }
@@ -136,9 +137,9 @@ public class UpdateManager {
      */
     public static Path locateJarInPlugins(@NotNull JavaPlugin plugin) {
         Path pluginsDir = plugin.getDataFolder().getParentFile().toPath();
-        String myMain = plugin.getPluginMeta().getMainClass();
-        String myName = plugin.getPluginMeta().getName();
-        String myVersion = plugin.getPluginMeta().getVersion();
+        String myMain = Version.getMainClass();
+        String myName = Version.getName();
+        String myVersion = Version.getVersion();
 
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(pluginsDir, "*.jar")) {
             for (Path jarPath : stream) {

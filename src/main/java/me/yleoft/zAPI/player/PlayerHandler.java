@@ -2,7 +2,6 @@ package me.yleoft.zAPI.player;
 
 import me.yleoft.zAPI.item.NbtHandler;
 import me.yleoft.zAPI.utility.Version;
-import me.yleoft.zAPI.utility.scheduler.Scheduler;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -34,9 +33,9 @@ public final class PlayerHandler {
      * @return the OfflinePlayer object, or null if not found
      */
     public static OfflinePlayer getOfflinePlayer(@NotNull UUID uuid) {
-        if(Version.USING_FOLIA) {
+        if(Version.isFolia()) {
             try {
-                Method getOfflinePlayerMethod = Bukkit.getServer().getClass().getMethod("getOfflinePlayerIfCached", UUID.class);
+                Method getOfflinePlayerMethod = zAPI.getPlugin().getServer().getClass().getMethod("getOfflinePlayerIfCached", UUID.class);
                 return (OfflinePlayer) getOfflinePlayerMethod.invoke(Bukkit.getServer(), uuid);
             } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
             }
@@ -51,9 +50,9 @@ public final class PlayerHandler {
      * @return the OfflinePlayer object, or null if not found
      */
     public static OfflinePlayer getOfflinePlayer(@NotNull String name) {
-        if(Version.USING_FOLIA) {
+        if(Version.isFolia()) {
             try {
-                Method getOfflinePlayerMethod = Bukkit.getServer().getClass().getMethod("getOfflinePlayerIfCached", String.class);
+                Method getOfflinePlayerMethod = zAPI.getPlugin().getServer().getClass().getMethod("getOfflinePlayerIfCached", String.class);
                 return (OfflinePlayer) getOfflinePlayerMethod.invoke(Bukkit.getServer(), name);
             } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
             }
@@ -72,7 +71,7 @@ public final class PlayerHandler {
         if(command.startsWith("[CON]") || (!command.startsWith("[") && player == null)) {
             command = cleanCommand(command.replace("[CON]", ""));
             String finalCommand = command;
-            Scheduler.runTask(null, () -> zAPI.getPlugin().getServer().dispatchCommand(zAPI.getPlugin().getServer().getConsoleSender(), finalCommand));
+            zAPI.getPlugin().getServer().dispatchCommand(zAPI.getPlugin().getServer().getConsoleSender(), finalCommand);
             return;
         }
         if(command.startsWith("[INV]")) {
@@ -114,7 +113,7 @@ public final class PlayerHandler {
         }
         if(player == null) return;
         @NotNull String finalCommand = command;
-        Scheduler.runTask(player.getLocation(), () -> player.performCommand(cleanCommand(finalCommand)));
+        player.performCommand(cleanCommand(finalCommand));
     }
     public static void performCommand(@Nullable Player player, @Nullable ItemStack item, @NotNull String command) {
         performCommand(player, item, command, false);

@@ -17,7 +17,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
 
 /**
  * Optimized PluginYAML for managing commands and permissions dynamically.
@@ -28,7 +27,7 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
     private static final PluginDescriptionFile DESCRIPTION_FILE = zAPI.getPlugin().getDescription();
     private static final Map<Command, Double> REGISTERED_COMMANDS = new ConcurrentHashMap<>();
     private static final Set<String> REGISTERED_PERMISSIONS = ConcurrentHashMap.newKeySet();
-    public static final Map<Player, Long> cacheCooldown = new ConcurrentHashMap<>();
+    public static final Map<Player, Long> cacheCooldown = new HashMap<>();
 
     /**
      * Sealed helper class to encapsulate reflection caching logic.
@@ -42,27 +41,6 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
 
         private ReflectionCache() {
             // Prevent instantiation
-        }
-    }
-
-    /**
-     * Record to encapsulate command registration data.
-     */
-    public record CommandRegistration(
-            String name,
-            CommandExecutor executor,
-            Double cooldown,
-            TabCompleter completer,
-            String description,
-            List<String> aliases
-    ) {
-        public CommandRegistration {
-            cooldown = Objects.requireNonNullElse(cooldown, 0.0);
-            aliases = aliases != null ? List.copyOf(aliases) : List.of();
-        }
-
-        public CommandRegistration(String name, CommandExecutor executor, String description, String... aliases) {
-            this(name, executor, 0.0, null, description, Arrays.asList(aliases));
         }
     }
 
@@ -137,7 +115,7 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
         } catch (NoSuchMethodException ignored) {
             // Server version doesn't support syncCommands
         } catch (ReflectiveOperationException e) {
-            zAPI.getLogger().warn("Failed to sync commands", e);
+            zAPI.getPluginLogger().warn("Failed to sync commands", e);
         }
     }
 
@@ -184,7 +162,7 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
         try {
             CommandMap commandMap = getCommandMap();
             Map<String, Command> knownCommands = getKnownCommands(commandMap);
-            String pluginPrefix = Optional.of(zAPI.getPlugin().getPluginMeta().getName())
+            String pluginPrefix = Optional.of(Version.getName())
                     .map(name -> name.toLowerCase(Locale.ROOT))
                     .orElse("");
 
@@ -212,8 +190,8 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
                 keysToRemove.forEach(knownCommands::remove);
                 REGISTERED_COMMANDS.clear();
             }
-        } catch(Exception exception){
-            zAPI.getLogger().error("Failed to unregister commands", exception);
+        } catch (Exception exception) {
+            zAPI.getPluginLogger().error("Failed to unregister commands", exception);
         }
     }
 
@@ -225,7 +203,7 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
             CommandMap commandMap = getCommandMap();
             Map<String, Command> knownCommands = getKnownCommands(commandMap);
             String cmdLower = commandName.toLowerCase(Locale.ROOT);
-            String pluginPrefix = Optional.of(zAPI.getPlugin().getPluginMeta().getName())
+            String pluginPrefix = Optional.of(Version.getName())
                     .map(name -> name.toLowerCase(Locale.ROOT))
                     .orElse("");
 
@@ -268,22 +246,20 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
             });
 
         } catch (Exception e) {
-            zAPI.getLogger().warn("Error unregistering command: " + commandName, e);
+            zAPI.getPluginLogger().warn("Error unregistering command: " + commandName, e);
         }
     }
 
     /**
      * Registers a command with full configuration.
      */
-    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor executor,
-                                       @Nullable Double cooldown, @Nullable TabCompleter completer,
-                                       @NotNull String description, @NotNull String... aliases) {
-        double finalCooldown = Objects.requireNonNullElse(cooldown, 0.0);
+    public static void registerCommand(me.yleoft.zAPI.command.Command commandClass) {
+        String command = commandClass.name();
+        String description = commandClass.description();
+        List<String> aliases = commandClass.aliases();
 
         if (DESCRIPTION_FILE.getCommands().containsKey(command)) {
-            zAPI.getLogger().warn("""
-                    &4Command &e/%s&4 is already registered in plugin.yml!
-                    """.formatted(command).trim());
+            zAPI.getPluginLogger().warn("<red>Command <yellow>/%s<red> is already registered in plugin.yml!".formatted(command));
             return;
         }
 
@@ -299,41 +275,22 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
 
             PluginCommand cmd = ReflectionCache.pluginCommandConstructor.newInstance(command, zAPI.getPlugin());
             cmd.setDescription(description);
-            cmd.setExecutor(executor);
+            cmd.setExecutor(commandClass);
+            cmd.setTabCompleter(commandClass);
 
-            if (completer != null) {
-                cmd.setTabCompleter(completer);
-            }
-
-            if (aliases != null && aliases.length > 0) {
-                cmd.setAliases(List.of(aliases));
+            if (aliases != null && !aliases.isEmpty()) {
+                cmd.setAliases(aliases);
             }
 
             CommandMap commandMap = getCommandMap();
-            commandMap.register(zAPI.getPlugin().getPluginMeta().getName(), cmd);
-            REGISTERED_COMMANDS.put(cmd, finalCooldown);
+            commandMap.register(Version.getName(), cmd);
+            REGISTERED_COMMANDS.put(cmd, commandClass.cooldownTime());
 
-            zAPI.getLogger().info("&aLoaded command &e/%s".formatted(command));
+            zAPI.getPluginLogger().info("<green>Loaded command <yellow>/%s".formatted(command));
 
         } catch (Exception exception) {
-            zAPI.getLogger().error("Failed to register command /%s".formatted(command), exception);
+            zAPI.getPluginLogger().error("<red>Failed to register command /%s".formatted(command), exception);
         }
-    }
-
-    // Overloaded convenience methods
-    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor executor,
-                                       @Nullable TabCompleter completer, @NotNull String description, @NotNull String... aliases) {
-        registerCommand(command, executor, null, completer, description, aliases);
-    }
-
-    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor executor,
-                                       @Nullable Double cooldown, @NotNull String description, @NotNull String... aliases) {
-        registerCommand(command, executor, cooldown, null, description, aliases);
-    }
-
-    public static void registerCommand(@NotNull String command, @NotNull CommandExecutor executor,
-                                       @NotNull String description, @NotNull String... aliases) {
-        registerCommand(command, executor, null, null, description, aliases);
     }
 
     /**
@@ -413,19 +370,5 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
      */
     public static Map<Command, Double> getCmds() {
         return Collections.unmodifiableMap(REGISTERED_COMMANDS);
-    }
-
-    /**
-     * Alternative registration method using CommandRegistration record.
-     */
-    public static void registerCommand(@NotNull CommandRegistration registration) {
-        registerCommand(
-                registration.name(),
-                registration.executor(),
-                registration.cooldown(),
-                registration.completer(),
-                registration.description(),
-                registration.aliases().toArray(String[]::new)
-        );
     }
 }

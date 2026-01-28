@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -101,7 +102,7 @@ class YAMLBuilderTest {
                 .build()
                 .refresh();
 
-        assertEquals("line1\nline2\nline3", b.getString("motd"));
+        assertEquals(List.of("line1", "line2", "line3"), b.getStringList("motd"));
 
         String content;
         try {
@@ -110,10 +111,10 @@ class YAMLBuilderTest {
             throw new RuntimeException(e);
         }
 
-        assertTrue(content.contains("motd: |"));
-        assertTrue(content.contains("  line1"));
-        assertTrue(content.contains("  line2"));
-        assertTrue(content.contains("  line3"));
+        assertTrue(content.contains("motd:"));
+        assertTrue(content.contains("  - \"line1\""));
+        assertTrue(content.contains("  - \"line2\""));
+        assertTrue(content.contains("  - \"line3\""));
     }
 
     @Test

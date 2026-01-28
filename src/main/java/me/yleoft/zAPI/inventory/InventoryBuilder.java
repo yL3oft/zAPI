@@ -1,5 +1,6 @@
 package me.yleoft.zAPI.inventory;
 
+import me.yleoft.zAPI.command.Command;
 import me.yleoft.zAPI.item.ItemBuilder;
 import me.yleoft.zAPI.item.NbtHandler;
 import me.yleoft.zAPI.utility.PluginYAML;
@@ -8,6 +9,7 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -41,15 +43,29 @@ public class InventoryBuilder {
             Component inventoryName = TextFormatter.transform(requireNonNull(config.getString(formPath(configPathInventory, "title"))));
             String command = config.getString("command");
             if(!PluginYAML.isCommandRegistered(command)) {
-                PluginYAML.registerCommand(command, (sender, cmd, label, args) -> {
-                    if (sender instanceof Player) {
+                Command commandObj = new Command() {
+                    @Override
+                    public @NotNull String name() {
+                        return command;
+                    }
+
+                    @Override
+                    public void execute(@NotNull CommandSender sender, @NotNull String[] fullArgs, @NotNull String @NotNull [] args) {
                         Player p = (Player) sender;
                         InventoryBuilder inventory = new InventoryBuilder(p, config);
                         p.openInventory(inventory.getInventory());
-                        return false;
                     }
-                    return false;
-                }, "Opens the custom inventory " + inventoryName);
+
+                    @Override
+                    public boolean playerOnly() {
+                        return true;
+                    }
+
+                    @Override
+                    public String description() {
+                        return "Opens the custom inventory " + inventoryName;
+                    }
+                };
             }
         }
     }

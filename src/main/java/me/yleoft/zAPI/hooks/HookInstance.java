@@ -22,6 +22,8 @@ public interface HookInstance {
      */
     void load();
 
+    default void unload() {}
+
     default String preloadMessage() {
         return "";
     }

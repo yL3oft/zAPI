@@ -1,7 +1,7 @@
 package me.yleoft.zAPI.listeners;
 
 import me.yleoft.zAPI.item.NbtHandler;
-import me.yleoft.zAPI.utility.scheduler.Scheduler;
+import me.yleoft.zAPI.zAPI;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,7 +26,7 @@ public class DupeFixerListeners extends NbtHandler implements Listener {
             return;
         }
 
-        Scheduler.runTaskLater(player.getLocation(), () -> cleanInventory(player, mark), 3L);
+        zAPI.getScheduler().runAtEntityLater(player, () -> cleanInventory(player, mark), 3L);
     }
 
     /**
@@ -58,7 +58,7 @@ public class DupeFixerListeners extends NbtHandler implements Listener {
      */
     @EventHandler
     private void onLogin(@NotNull final PlayerLoginEvent event) {
-        Scheduler.runTaskLater(event.getPlayer().getLocation(), () -> cleanInventory(event.getPlayer(), mark), 10L);
+        zAPI.getScheduler().runAtEntityLater(event.getPlayer(), () -> cleanInventory(event.getPlayer(), mark), 10L);
     }
 
 }
