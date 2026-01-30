@@ -27,6 +27,7 @@ public class YAMLBuilder extends Path {
     private final Map<String, Boolean> commentHighlight = new LinkedHashMap<>();
     private final Map<String, String[]> sectionComments = new LinkedHashMap<>();
     private final Set<String> voidedPaths = new HashSet<>();
+    private final List<String> insertionOrder = new ArrayList<>(); // Track insertion order
     private String[] header = null;
     private String[] footer = null;
     private String[] nextComment = null;
@@ -842,6 +843,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder addDefault(String path, String value) {
         defaults.put(path, toYamlStringValue(value));
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -854,6 +859,10 @@ public class YAMLBuilder extends Path {
         }
         defaults.put(path, Arrays.stream(values).toList());
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -863,6 +872,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder addDefault(String path, int value) {
         defaults.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -872,6 +885,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder addDefault(String path, long value) {
         defaults.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -881,6 +898,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder addDefault(String path, double value) {
         defaults.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -890,6 +911,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder addDefault(String path, float value) {
         defaults.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -899,6 +924,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder addDefault(String path, boolean value) {
         defaults.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -908,6 +937,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder addDefault(String path, List<String> value) {
         defaults.put(path, new ArrayList<>(value));
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -926,6 +959,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder addDefault(String path, byte value) {
         defaults.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -935,6 +972,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder addDefault(String path, short value) {
         defaults.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -944,6 +985,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder addDefault(String path, char value) {
         defaults.put(path, String.valueOf(value));
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -955,6 +1000,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder setValue(String path, String value) {
         values.put(path, toYamlStringValue(value));
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -964,6 +1013,10 @@ public class YAMLBuilder extends Path {
         }
         defaults.put(path, Arrays.stream(values).toList());
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -973,6 +1026,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder setValue(String path, int value) {
         values.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -982,6 +1039,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder setValue(String path, double value) {
         values.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -991,6 +1052,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder setValue(String path, boolean value) {
         values.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -1000,6 +1065,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder setValue(String path, List<String> value) {
         values.put(path, new ArrayList<>(value));
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -1009,6 +1078,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder setValue(String path, long value) {
         values.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -1018,6 +1091,10 @@ public class YAMLBuilder extends Path {
     public YAMLBuilder setValue(String path, float value) {
         values.put(path, value);
         applyPendingComment(path);
+        // Track insertion order
+        if (!insertionOrder.contains(path)) {
+            insertionOrder.add(path);
+        }
         return this;
     }
 
@@ -1429,15 +1506,22 @@ public class YAMLBuilder extends Path {
                 copyAllValues(cachedData, finalData, "");
             }
 
-            // Combine defaults and values in declaration order
-            // We need to maintain the order in which paths were declared
+            // Combine defaults and values in exact declaration order
+            // Use insertionOrder to maintain the order in which setValue/addDefault were called
             Map<String, Object> allEntries = new LinkedHashMap<>();
-            allEntries.putAll(defaults);
 
             if (firstTimeGenerate) {
-                // For first-time generation, merge values into allEntries
-                // We need to insert values at the correct position relative to defaults
+                // For first-time generation, use insertion order
                 allEntries = mergeInDeclarationOrder(defaults, values);
+            } else {
+                // For updates, still respect insertion order but include all entries
+                for (String path : insertionOrder) {
+                    if (defaults.containsKey(path)) {
+                        allEntries.put(path, defaults.get(path));
+                    } else if (values.containsKey(path)) {
+                        allEntries.put(path, values.get(path));
+                    }
+                }
             }
 
             // Now add them all in order
@@ -1472,41 +1556,21 @@ public class YAMLBuilder extends Path {
     }
 
     /**
-     * Merges defaults and values maps while preserving declaration order.
-     * Values are inserted at positions that maintain proper YAML structure.
+     * Merges defaults and values maps while preserving the exact declaration order.
+     * Uses the insertionOrder list to maintain the order in which setValue/addDefault were called.
      */
     private Map<String, Object> mergeInDeclarationOrder(Map<String, Object> defaults, Map<String, Object> values) {
         Map<String, Object> result = new LinkedHashMap<>();
-        Set<String> processedValues = new HashSet<>();
 
-        for (Map.Entry<String, Object> defaultEntry : defaults.entrySet()) {
-            String defaultPath = defaultEntry.getKey();
+        // Process entries in the exact order they were added
+        for (String path : insertionOrder) {
+            if (isVoided(path)) continue;
 
-            // Before adding this default, check if there are any values that should come before it
-            // (values that share the same parent but weren't in defaults before this point)
-            String defaultParent = getParentPath(defaultPath);
-
-            for (Map.Entry<String, Object> valueEntry : values.entrySet()) {
-                String valuePath = valueEntry.getKey();
-                if (processedValues.contains(valuePath)) continue;
-
-                String valueParent = getParentPath(valuePath);
-
-                // If this value has the same parent as the current default,
-                // and this value's key comes before any nested sections in the default
-                if (valueParent.equals(defaultParent) && shouldInsertValueBefore(valuePath, defaultPath, defaults)) {
-                    result.put(valuePath, valueEntry.getValue());
-                    processedValues.add(valuePath);
-                }
-            }
-
-            result.put(defaultPath, defaultEntry.getValue());
-        }
-
-        // Add any remaining values that weren't processed
-        for (Map.Entry<String, Object> valueEntry : values.entrySet()) {
-            if (!processedValues.contains(valueEntry.getKey()) && !isVoided(valueEntry.getKey())) {
-                result.put(valueEntry.getKey(), valueEntry.getValue());
+            // Prefer values over defaults
+            if (values.containsKey(path)) {
+                result.put(path, values.get(path));
+            } else if (defaults.containsKey(path)) {
+                result.put(path, defaults.get(path));
             }
         }
 
@@ -1572,54 +1636,9 @@ public class YAMLBuilder extends Path {
             return;
         }
 
-        // Otherwise, we need to insert it in the correct order
-        // Find all sibling paths and determine the correct insertion order
-        String parentPath = getParentPath(path);
-        List<String> siblingOrder = new ArrayList<>();
-
-        for (String entryPath : allEntries.keySet()) {
-            String entryParent = getParentPath(entryPath);
-            if (entryParent.equals(parentPath)) {
-                String siblingKey = entryPath.substring(parentPath.isEmpty() ? 0 : parentPath.length() + 1);
-                if (siblingKey.contains(".")) {
-                    siblingKey = siblingKey.substring(0, siblingKey.indexOf('.'));
-                }
-                if (!siblingOrder.contains(siblingKey)) {
-                    siblingOrder.add(siblingKey);
-                }
-            }
-        }
-
-        // Rebuild the map in the correct order
-        Map<String, Object> reordered = new LinkedHashMap<>();
-        Set<String> existingKeys = new LinkedHashSet<>(current.keySet());
-        existingKeys.add(finalKey);
-
-        // First add keys in the order they appear in siblingOrder
-        for (String orderedKey : siblingOrder) {
-            if (existingKeys.contains(orderedKey)) {
-                if (orderedKey.equals(finalKey)) {
-                    reordered.put(finalKey, value);
-                } else if (current.containsKey(orderedKey)) {
-                    reordered.put(orderedKey, current.get(orderedKey));
-                }
-            }
-        }
-
-        // Then add any remaining keys that weren't in siblingOrder
-        for (String existingKey : existingKeys) {
-            if (!reordered.containsKey(existingKey)) {
-                if (existingKey.equals(finalKey)) {
-                    reordered.put(finalKey, value);
-                } else if (current.containsKey(existingKey)) {
-                    reordered.put(existingKey, current.get(existingKey));
-                }
-            }
-        }
-
-        // Replace the contents of current with reordered
-        current.clear();
-        current.putAll(reordered);
+        // Simply add the key - LinkedHashMap maintains insertion order
+        // The order is already correct because we iterate through allEntries in order
+        current.put(finalKey, value);
     }
 
     private static boolean isTextBox(String s) {

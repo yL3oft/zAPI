@@ -32,6 +32,13 @@ public class PlayerListeners implements Listener {
         if (pluginCommand == null) return;
 
         if(PluginYAML.getCmds().containsKey(pluginCommand)) {
+            me.yleoft.zAPI.command.Command commandInstance = PluginYAML.getCommandInstance(pluginCommand);
+            if (commandInstance != null) {
+                String bypassPermission = commandInstance.bypassCooldownPermission();
+                if (bypassPermission != null && !bypassPermission.isEmpty() && player.hasPermission(bypassPermission)) {
+                    return;
+                }
+            }
             long currentTime = System.currentTimeMillis();
             if(cacheCooldown.containsKey(player)) {
                 long cooldown = cacheCooldown.get(player);

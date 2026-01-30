@@ -26,6 +26,7 @@ public abstract class NbtHandler {
      * Marks an item with a specific mark.
      * @param item The item to mark.
      * @param mark The mark to apply to the item.
+     * @param value The boolean value to set for the mark.
      */
     public static void markItem(@NotNull ItemStack item, @NotNull final String mark, boolean value) {
         NBT.modify(item, nbt -> {
@@ -82,6 +83,8 @@ public abstract class NbtHandler {
      * Adds a custom command NBT to an item.
      * @param item The item to add the command to.
      * @param command The command to add.
+     * @param replaces A map of strings to replace in the command.
+     * @param isConsole Whether the command should be executed as console.
      */
     public static void addCustomCommand(@NotNull ItemStack item, @NotNull final String command, @Nullable final Map<String, String> replaces, boolean isConsole) {
         NBT.modify(item, nbt -> {
@@ -145,6 +148,10 @@ public abstract class NbtHandler {
         });
     }
 
+    /**
+     * Removes all custom commands from an item.
+     * @param item The item to remove the commands from.
+     */
     public static void removeCustomCommands(@NotNull ItemStack item) {
         NBT.modify(item, nbt -> {
             nbt.removeKey(customCommandNBT);
@@ -166,6 +173,11 @@ public abstract class NbtHandler {
         });
     }
 
+    /**
+     * Cleans the inventory of a player by removing all items marked with a specific mark.
+     * @param player The player whose inventory to clean.
+     * @param mark The mark to look for.
+     */
     public static void cleanInventory(@NotNull final Player player, @NotNull String mark) {
         for (ItemStack item : player.getInventory().getContents()) {
             if(item == null) continue;

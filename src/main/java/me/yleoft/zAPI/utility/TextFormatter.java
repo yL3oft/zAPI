@@ -5,7 +5,6 @@ import me.yleoft.zAPI.configuration.Messages;
 import me.yleoft.zAPI.hooks.HookRegistry;
 import me.yleoft.zAPI.zAPI;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

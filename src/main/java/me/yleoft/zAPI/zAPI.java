@@ -141,6 +141,7 @@ public abstract class zAPI {
             getScheduler().cancelAllTasks();
             HandlerList.unregisterAll(plugin);
             PluginYAML.unregisterPermissions();
+            PluginYAML.unregisterCommands();
         }
         FileLogger.compressLogs();
         plugin = null;

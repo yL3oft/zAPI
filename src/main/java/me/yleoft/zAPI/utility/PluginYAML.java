@@ -26,6 +26,7 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
 
     private static final PluginDescriptionFile DESCRIPTION_FILE = zAPI.getPlugin().getDescription();
     private static final Map<Command, Double> REGISTERED_COMMANDS = new ConcurrentHashMap<>();
+    private static final Map<Command, me.yleoft.zAPI.command.Command> COMMAND_INSTANCES = new ConcurrentHashMap<>();
     private static final Set<String> REGISTERED_PERMISSIONS = ConcurrentHashMap.newKeySet();
     public static final Map<Player, Long> cacheCooldown = new HashMap<>();
 
@@ -189,6 +190,7 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
 
                 keysToRemove.forEach(knownCommands::remove);
                 REGISTERED_COMMANDS.clear();
+                COMMAND_INSTANCES.clear();
             }
         } catch (Exception exception) {
             zAPI.getPluginLogger().error("Failed to unregister commands", exception);
@@ -243,6 +245,7 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
                     pluginCommand.setTabCompleter(emptyExec);
                 }
                 REGISTERED_COMMANDS.remove(command);
+                COMMAND_INSTANCES.remove(command);
             });
 
         } catch (Exception e) {
@@ -285,6 +288,7 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
             CommandMap commandMap = getCommandMap();
             commandMap.register(Version.getName(), cmd);
             REGISTERED_COMMANDS.put(cmd, commandClass.cooldownTime());
+            COMMAND_INSTANCES.put(cmd, commandClass);
 
             zAPI.getPluginLogger().info("<green>Loaded command <yellow>/%s".formatted(command));
 
@@ -370,5 +374,16 @@ public abstract sealed class PluginYAML permits PluginYAML.ReflectionCache {
      */
     public static Map<Command, Double> getCmds() {
         return Collections.unmodifiableMap(REGISTERED_COMMANDS);
+    }
+
+    /**
+     * Gets the command instance associated with a Bukkit command.
+     *
+     * @param command The Bukkit command to look up
+     * @return The command instance, or null if not found
+     */
+    @Nullable
+    public static me.yleoft.zAPI.command.Command getCommandInstance(@NotNull Command command) {
+        return COMMAND_INSTANCES.get(command);
     }
 }

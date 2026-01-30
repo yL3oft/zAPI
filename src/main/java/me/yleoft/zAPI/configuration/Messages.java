@@ -1,5 +1,8 @@
 package me.yleoft.zAPI.configuration;
 
+/**
+ * Class for managing customizable messages in the application.
+ */
 public abstract class Messages {
 
     private static String pluginPrefix = "";
@@ -7,6 +10,7 @@ public abstract class Messages {
     private static String onlyPlayersDefault = "<red>This command can only be executed by players.";
     private static String cooldownMessage = "<red>You must wait %time% seconds before using this command again.";
 
+    /** GETTERS & SETTERS **/
     public static String getCooldownMessage(double time) {
         return cooldownMessage.replace("%time%", String.valueOf(time));
     }

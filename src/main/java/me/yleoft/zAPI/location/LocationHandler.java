@@ -70,16 +70,24 @@ public final class LocationHandler {
      * @return a Location object representing the serialized data
      */
     public static Location deserialize(@NotNull final String serialized) {
-        StringTokenizer tokenizer = new StringTokenizer(serialized, ";");
+        String[] parts = serialized.split(";");
 
-        World w = Bukkit.getWorld(tokenizer.nextToken());
-        double x = Double.parseDouble(tokenizer.nextToken());
-        double y = Double.parseDouble(tokenizer.nextToken());
-        double z = Double.parseDouble(tokenizer.nextToken());
-        float yaw = Float.parseFloat(tokenizer.nextToken());
-        float pitch = Float.parseFloat(tokenizer.nextToken());
+        if (parts.length != 6) {
+            throw new IllegalArgumentException("Invalid serialized location format. Expected 6 parts but got " + parts.length + ": " + serialized);
+        }
 
-        return new Location(w, x, y, z, yaw, pitch);
+        try {
+            World w = Bukkit.getWorld(parts[0]);
+            double x = Double.parseDouble(parts[1]);
+            double y = Double.parseDouble(parts[2]);
+            double z = Double.parseDouble(parts[3]);
+            float yaw = Float.parseFloat(parts[4]);
+            float pitch = Float.parseFloat(parts[5]);
+
+            return new Location(w, x, y, z, yaw, pitch);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid number format in serialized location: " + serialized, e);
+        }
     }
 
     /**

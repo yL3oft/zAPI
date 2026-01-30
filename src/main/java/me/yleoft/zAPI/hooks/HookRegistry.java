@@ -5,12 +5,18 @@ import me.yleoft.zAPI.zAPI;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Registry for managing hook instances.
+ */
 public class HookRegistry {
 
     private static final List<HookInstance> Hooks = new ArrayList<>();
 
     public static final HookPlaceholderAPI PAPI = new HookPlaceholderAPI();
 
+    /**
+     * Pre-loads all registered hooks.
+     */
     public static void preload() {
         try {
             boolean debugMode = zAPI.getPluginLogger().isDebugMode();
@@ -37,6 +43,9 @@ public class HookRegistry {
         }
     }
 
+    /**
+     * Loads all registered hooks.
+     */
     public static void load() {
         try {
             if(!Hooks.contains(PAPI)) {
@@ -60,6 +69,9 @@ public class HookRegistry {
         }
     }
 
+    /**
+     * Unloads all registered hooks.
+     */
     public static void unload() {
         Hooks.forEach(instance -> {
             try {
@@ -70,10 +82,17 @@ public class HookRegistry {
         });
     }
 
+    /**
+     * Registers a new hook instance.
+     * @param hookInstance The hook instance to register.
+     */
     public static void registerHook(HookInstance hookInstance) {
         Hooks.add(hookInstance);
     }
 
+    /**
+     * Clears all registered hooks.
+     */
     public static void clearHooks() {
         Hooks.clear();
     }

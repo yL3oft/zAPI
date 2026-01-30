@@ -12,6 +12,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
+/**
+ * Basis for commands with subcommands and parameters.
+ */
 public interface CommandBasis extends CommandExecutor, TabCompleter {
 
     Map<CommandBasis, List<SubCommand>> subCommands = new HashMap<>();
@@ -33,8 +36,14 @@ public interface CommandBasis extends CommandExecutor, TabCompleter {
         return false;
     }
 
+    /**
+     * The main execution logic of this command.
+     */
     void execute(@NotNull CommandSender sender, @NotNull String[] fullArgs, @NotNull String @NotNull [] args);
 
+    /**
+     * Adds a parameter to this command.
+     */
     default void addParameter(@NotNull Parameter parameter) {
         parameters.computeIfAbsent(this, k -> new ArrayList<>()).add(parameter);
     }

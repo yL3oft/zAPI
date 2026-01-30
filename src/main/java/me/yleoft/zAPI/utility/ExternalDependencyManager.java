@@ -41,6 +41,7 @@ public final class ExternalDependencyManager {
         this.httpClient = Objects.requireNonNull(httpClient, "httpClient");
     }
 
+    /** Register a dependency by ID and JAR URL. */
     public void registerDependency(String id, URI jarUrl) {
         validateId(id);
         Objects.requireNonNull(jarUrl, "jarUrl");
