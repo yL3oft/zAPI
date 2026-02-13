@@ -2,6 +2,7 @@ package me.yleoft.zAPI;
 
 import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.PlatformScheduler;
+import me.yleoft.zAPI.handlers.PlaceholderDefinition;
 import me.yleoft.zAPI.handlers.PlaceholdersHandler;
 import me.yleoft.zAPI.hooks.HookRegistry;
 import me.yleoft.zAPI.listeners.DupeFixerListeners;
@@ -29,6 +30,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -52,18 +54,6 @@ public abstract class zAPI {
         } catch (IOException | InvalidConfigurationException e) {
             VERSION = defaultVersion;
         }
-
-        placeholdersHandler = new PlaceholdersHandler() {
-            @Override
-            public @NotNull String getIdentifier() {
-                return "";
-            }
-
-            @Override
-            public @Nullable String applyHookPlaceholders(@Nullable OfflinePlayer player, @NotNull String params) {
-                return "";
-            }
-        };
     }
 
     private static JavaPlugin plugin;
@@ -77,7 +67,12 @@ public abstract class zAPI {
         }
 
         @Override
-        public @Nullable String applyHookPlaceholders(@Nullable OfflinePlayer player, @NotNull String params) {
+        public @NotNull List<PlaceholderDefinition> getPlaceholders() {
+            return List.of();
+        }
+
+        @Override
+        public @Nullable String onPlaceholderRequest(@Nullable OfflinePlayer player, @NotNull String key, @NotNull List<String> parameters) {
             return "";
         }
     };
@@ -246,6 +241,7 @@ public abstract class zAPI {
     public static void setPlaceholdersHandler(@NotNull PlaceholdersHandler handler) {
         zAPI.getLogger().debug("Setting custom PlaceholderAPIHandler: " + handler.getClass().getName());
         HookRegistry.PAPI.registerPlaceholderExpansion(handler);
+        HookRegistry.MINI_PLACEHOLDERS.registerPlaceholderExpansion(handler);
         zAPI.placeholdersHandler = handler;
     }
 

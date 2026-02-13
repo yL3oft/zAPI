@@ -68,7 +68,7 @@ public class HookPlaceholderAPI implements HookInstance {
                 };
                 ((PlaceholderExpansion) expansion).register();
                 expansions.put(handler, (PlaceholderExpansion) expansion);
-            }catch (Exception exception) {
+            } catch (Exception exception) {
                 zAPI.getLogger().warn("Failed to register PlaceholderAPI expansion for: " + handler.getIdentifier(), exception);
             }
         }

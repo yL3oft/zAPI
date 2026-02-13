@@ -222,19 +222,17 @@ public class InventoryBuilder {
                                                             @NotNull YamlConfiguration config) {
         Map<String, String> placeholders = new HashMap<>();
 
-        // %rows% - number of rows
+        // %rows% - number of rows (PAPI format)
         placeholders.put("%rows%", String.valueOf(this.rows));
 
-        // %title% - raw title string from config (before any formatting/components)
+        // %title% - raw title string from config (PAPI format)
         String titleString = config.getString(formPath(KEY_INVENTORY, KEY_TITLE), "Inventory");
         placeholders.put("%title%", titleString);
 
-        // %command% - command name (if defined)
+        // %command% - command name (PAPI format)
         String commandName = config.getString(KEY_COMMAND, "");
         placeholders.put("%command%", commandName);
 
-        // Parse custom inventory-level placeholders from Inventory.placeholders
-        // These are processed once when the inventory is created
         Map<String, String> customPlaceholders = ItemBuilder.parsePlaceholderDefinitions(
                 player,
                 config,

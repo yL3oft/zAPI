@@ -333,6 +333,18 @@ public abstract class ItemBuilder {
     // ========================================
 
     /**
+     * Registers native item placeholders with the placeholder handler system.
+     * This allows native placeholders to work with both PAPI and MiniPlaceholders.
+     *
+     * Should be called during plugin initialization.
+     */
+    public static void registerNativePlaceholders() {
+        // Native placeholders are handled dynamically per-item, so we don't need
+        // to register them globally. They're applied directly in applyPlaceholders.
+        // This method exists for future extensibility.
+    }
+
+    /**
      * Applies placeholders to a string, including player placeholders, custom placeholders,
      * and evaluates mathematical expressions wrapped in {math: ... } tags.
      *
@@ -352,10 +364,21 @@ public abstract class ItemBuilder {
                                             @Nullable Map<String, String> placeholders) {
         String result = text;
 
-        // 1. Apply custom placeholders FIRST (slot, player, currentitem, etc.)
+        // 1. Apply custom placeholders FIRST (both %format% and <format>)
         if (placeholders != null && !placeholders.isEmpty()) {
             for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-                result = result.replace(entry.getKey(), entry.getValue());
+                String key = entry.getKey();
+                String value = entry.getValue();
+
+                // Replace PAPI format: %placeholder%
+                result = result.replace(key, value);
+
+                // Also replace MiniPlaceholders format: <placeholder>
+                // Convert %placeholder% to <placeholder> (strip the % signs)
+                if (key.startsWith("%") && key.endsWith("%")) {
+                    String miniKey = "<" + key.substring(1, key.length() - 1) + ">";
+                    result = result.replace(miniKey, value);
+                }
             }
         }
 
@@ -364,6 +387,10 @@ public abstract class ItemBuilder {
 
         // 3. Apply player placeholders (PlaceholderAPI) LAST
         result = TextFormatter.applyPlaceholders(player, result);
+
+        // Note: MiniPlaceholders format for external placeholders is handled by
+        // HookMiniPlaceholders when MiniPlaceholders is present. Native placeholders
+        // are handled above in step 1.
 
         return result;
     }
@@ -463,27 +490,21 @@ public abstract class ItemBuilder {
                                                              int itemIndex) {
         Map<String, String> placeholders = new HashMap<>();
 
-        // %slot% - the actual slot number (0-based)
+        // PAPI format
         placeholders.put("%slot%", String.valueOf(slot));
-
-        // %currentitem% - index for items spread across multiple slots (1-based)
         placeholders.put("%currentitem%", String.valueOf(itemIndex));
-
-        // %player% - player name or empty string
         placeholders.put("%player%", player != null ? player.getName() : "");
-
-        // %online% - number of online players
         placeholders.put("%online%", String.valueOf(org.bukkit.Bukkit.getOnlinePlayers().size()));
-
-        // %uuid% - player UUID as string or empty string
         placeholders.put("%uuid%", player != null ? player.getUniqueId().toString() : "");
 
-        // %world% - player's current world name or empty string
         if (player != null && player.isOnline() && player instanceof Player) {
             placeholders.put("%world%", ((Player) player).getWorld().getName());
         } else {
             placeholders.put("%world%", "");
         }
+
+        // Note: MiniPlaceholders format is handled automatically in applyPlaceholders
+        // by converting %key% to <key> format
 
         return placeholders;
     }
