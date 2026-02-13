@@ -1,9 +1,11 @@
 package me.yleoft.zAPI.utility;
 
+import io.github.miniplaceholders.api.MiniPlaceholders;
 import me.clip.placeholderapi.PlaceholderAPI;
 import me.yleoft.zAPI.configuration.Messages;
 import me.yleoft.zAPI.hooks.HookRegistry;
 import me.yleoft.zAPI.zAPI;
+import net.kyori.adventure.pointer.Pointered;
 import net.kyori.adventure.text.Component;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +17,6 @@ import java.util.regex.Pattern;
 
 public abstract class TextFormatter {
 
-    private static final Pattern HEX_PATTERN = Pattern.compile("&#([A-Fa-f0-9]{6})");
     private static final Pattern TIME_PATTERN = Pattern.compile("(\\d+)(y|mo|w|d|h|m|s)", Pattern.CASE_INSENSITIVE);
 
     private static final Map<String, Long> TIME_UNITS = Map.of(
@@ -47,7 +48,7 @@ public abstract class TextFormatter {
      */
     @NotNull
     public static Component transform(@Nullable OfflinePlayer p, @NotNull String string) {
-        return zAPI.getMiniMessage().deserialize(transformString(p, string));
+        return applyMiniPlaceholders(p, transformString(p, string));
     }
 
     /**
@@ -69,7 +70,7 @@ public abstract class TextFormatter {
      */
     @NotNull
     public static Component transform(@Nullable OfflinePlayer p, @NotNull Component component) {
-        return zAPI.getMiniMessage().deserialize(transformString(p, component));
+        return applyMiniPlaceholders(p, transformString(p, component));
     }
 
     /**
@@ -134,7 +135,19 @@ public abstract class TextFormatter {
         if (p != null && HookRegistry.PAPI.exists())
             string = PlaceholderAPI.setPlaceholders(p, string);
         string = string.replace("%prefix%", Messages.getPluginPrefix());
-        return zAPI.getPlaceholdersHandler().applyPlaceholders(p, string);
+        return zAPI.getPlaceholdersHandler() != null ? zAPI.getPlaceholdersHandler().applyPlaceholders(p, string) : string;
+    }
+
+    /**
+     * Apply placeholders to a string for a specific player and turns it into a Component.
+     * @param p The player to apply placeholders for
+     * @param string The string to apply placeholders to
+     * @return The component with placeholders applied
+     */
+    public static Component applyMiniPlaceholders(@Nullable final OfflinePlayer p, @NotNull String string) {
+        if(!HookRegistry.MINI_PLACEHOLDERS.exists()) return zAPI.getMiniMessage().deserialize(string);
+        if(p instanceof Pointered pointered) return zAPI.getMiniMessage().deserialize(string, pointered, MiniPlaceholders.audienceGlobalPlaceholders());
+        return zAPI.getMiniMessage().deserialize(string, MiniPlaceholders.globalPlaceholders());
     }
 
     /**

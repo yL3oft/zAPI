@@ -14,6 +14,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +25,7 @@ import static me.yleoft.zAPI.item.NbtHandler.mark;
  */
 public final class PlayerHandler {
 
+    private static Function<String, UUID> offlineUUIDResolver = null;
     private static final Pattern START_PATTERN = Pattern.compile("^\\[(\\d+(?:\\.\\d+)?)]");
 
     /**
@@ -50,6 +52,16 @@ public final class PlayerHandler {
      * @return the OfflinePlayer object, or null if not found
      */
     public static OfflinePlayer getOfflinePlayer(@NotNull String name) {
+        Player online = Bukkit.getPlayerExact(name);
+        if (online != null) return online;
+
+        if (offlineUUIDResolver != null) {
+            try {
+                UUID resolved = offlineUUIDResolver.apply(name);
+                if (resolved != null) return getOfflinePlayer(resolved);
+            } catch (Throwable ignored) {}
+        }
+
         if(Version.isFolia()) {
             try {
                 Method getOfflinePlayerMethod = zAPI.getPlugin().getServer().getClass().getMethod("getOfflinePlayerIfCached", String.class);
@@ -58,6 +70,15 @@ public final class PlayerHandler {
             }
         }
         return Bukkit.getOfflinePlayer(name);
+    }
+
+    /**
+     * Sets a custom resolver function for obtaining UUIDs from player names when using the getOfflinePlayer(String) method.
+     *
+     * @param resolver a function that takes a player name and returns the corresponding UUID
+     */
+    public static void setOfflineUUIDResolver(java.util.function.Function<String, UUID> resolver) {
+        offlineUUIDResolver = resolver;
     }
 
     /**

@@ -70,7 +70,17 @@ public abstract class zAPI {
     private static FoliaLib foliaLib;
     private static Logger logger;
     private static Logger pluginLogger;
-    private static PlaceholdersHandler placeholdersHandler;
+    private static PlaceholdersHandler placeholdersHandler = new PlaceholdersHandler() {
+        @Override
+        public @NotNull String getIdentifier() {
+            return "";
+        }
+
+        @Override
+        public @Nullable String applyHookPlaceholders(@Nullable OfflinePlayer player, @NotNull String params) {
+            return "";
+        }
+    };
     private static final MiniMessage miniMessage = MiniMessage.miniMessage();
     public static boolean useNBTAPI = false;
 

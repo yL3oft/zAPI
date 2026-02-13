@@ -13,6 +13,7 @@ public class HookRegistry {
     private static final List<HookInstance> Hooks = new ArrayList<>();
 
     public static final HookPlaceholderAPI PAPI = new HookPlaceholderAPI();
+    public static final HookMiniPlaceholders MINI_PLACEHOLDERS = new HookMiniPlaceholders();
 
     /**
      * Pre-loads all registered hooks.
@@ -23,6 +24,9 @@ public class HookRegistry {
             zAPI.getPluginLogger().setDebugMode(true);
             if(!Hooks.contains(PAPI)) {
                 Hooks.add(PAPI);
+            }
+            if(!Hooks.contains(MINI_PLACEHOLDERS)) {
+                Hooks.add(MINI_PLACEHOLDERS);
             }
 
             Hooks.forEach(instance -> {
@@ -50,6 +54,9 @@ public class HookRegistry {
         try {
             if(!Hooks.contains(PAPI)) {
                 Hooks.add(PAPI);
+            }
+            if(!Hooks.contains(MINI_PLACEHOLDERS)) {
+                Hooks.add(MINI_PLACEHOLDERS);
             }
 
             Hooks.forEach(instance -> {
