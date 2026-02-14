@@ -189,6 +189,17 @@ public interface CommandBasis extends CommandExecutor, TabCompleter {
             }
 
             String[] paramArgs = Arrays.copyOfRange(args, start, start + taken);
+
+            // Whitelist validation
+            for (String arg : paramArgs) {
+                if (!param.isWhitelisted(arg)) {
+                    if (param.whitelistMessage() != null) {
+                        message(sender, param.whitelistMessage());
+                    }
+                    return new ParameterParseResult(new String[0], true);
+                }
+            }
+
             alreadyUsed.add(param);
 
             if (sender instanceof Player p) {

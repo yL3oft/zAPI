@@ -1,5 +1,6 @@
 package me.yleoft.zAPI.location;
 
+import me.yleoft.zAPI.zAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -9,12 +10,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static java.util.Objects.requireNonNull;
 
-/**
- * Utility class for location-related operations.
- */
 public final class LocationHandler {
 
     private static final EnumSet<Material> blacklistedGround = EnumSet.noneOf(Material.class);
@@ -154,6 +153,20 @@ public final class LocationHandler {
         return bestLoc;
     }
 
+    @NotNull
+    public static CompletableFuture<Location> findNearestSafeLocationAsync(@NotNull final Location origin, int radius, int heightCheckRange) {
+        CompletableFuture<Location> future = new CompletableFuture<>();
+        zAPI.getScheduler().runAtLocation(origin, task -> {
+            try {
+                Location result = findNearestSafeLocation(origin, radius, heightCheckRange);
+                future.complete(result);
+            } catch (Exception e) {
+                future.completeExceptionally(e);
+            }
+        });
+        return future;
+    }
+
     /**
      * Checks if the given location is safe for a player to stand on.
      * @param loc the location to check
@@ -168,6 +181,20 @@ public final class LocationHandler {
         Block ground = world.getBlockAt(loc.clone().add(0, -1, 0));
 
         return isAirOrNonSolid(feet) && isAirOrNonSolid(head) && isSafeGround(ground);
+    }
+
+    @NotNull
+    public static CompletableFuture<Boolean> isSafeLocationAsync(@NotNull final Location loc) {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        zAPI.getScheduler().runAtLocation(loc, task -> {
+            try {
+                boolean result = isSafeLocation(loc);
+                future.complete(result);
+            } catch (Exception e) {
+                future.completeExceptionally(e);
+            }
+        });
+        return future;
     }
 
     /**
@@ -189,7 +216,7 @@ public final class LocationHandler {
         return block.getType().isSolid() && !block.isLiquid() && !blacklistedGround.contains(type);
     }
 
-    private static class MutableBlockLocation {
+    public static class MutableBlockLocation {
         private final World world;
         private int x, y, z;
 
@@ -235,6 +262,4 @@ public final class LocationHandler {
             return new Location(world, x, y, z);
         }
     }
-
-
 }

@@ -119,8 +119,7 @@ public final class ExternalDependencyManager {
     public URLClassLoader loadIsolated(String id, ClassLoader parent) throws IOException, InterruptedException {
         Path jar = download(id);
         URL url = jar.toUri().toURL();
-        ClassLoader p = (parent != null) ? parent : Thread.currentThread().getContextClassLoader();
-        return new URLClassLoader(new URL[]{url}, p);
+        return new URLClassLoader(new URL[]{url}, parent);
     }
 
     /**
@@ -132,8 +131,7 @@ public final class ExternalDependencyManager {
         for (String id : sortedIds()) {
             urls.add(download(id).toUri().toURL());
         }
-        ClassLoader p = (parent != null) ? parent : Thread.currentThread().getContextClassLoader();
-        return new URLClassLoader(urls.toArray(URL[]::new), p);
+        return new URLClassLoader(urls.toArray(URL[]::new), parent);
     }
 
     /**
