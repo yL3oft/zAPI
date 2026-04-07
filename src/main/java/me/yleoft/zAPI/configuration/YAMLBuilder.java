@@ -2074,7 +2074,14 @@ public class YAMLBuilder extends Path {
     private String unquote(String value) {
         if ((value.startsWith("\"") && value.endsWith("\"")) ||
                 (value.startsWith("'") && value.endsWith("'"))) {
-            return value.substring(1, value.length() - 1);
+            String inner = value.substring(1, value.length() - 1);
+            return inner
+                    .replace("\\\\", "\\")
+                    .replace("\\\"", "\"")
+                    .replace("\\'", "'")
+                    .replace("\\n", "\n")
+                    .replace("\\r", "\r")
+                    .replace("\\t", "\t");
         }
         return value;
     }
