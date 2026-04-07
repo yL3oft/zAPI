@@ -2,16 +2,16 @@ package me.yleoft.zAPI;
 
 import com.tcoded.folialib.FoliaLib;
 import com.tcoded.folialib.impl.PlatformScheduler;
-import me.yleoft.zAPI.handlers.PlaceholderDefinition;
-import me.yleoft.zAPI.handlers.PlaceholdersHandler;
-import me.yleoft.zAPI.hooks.HookRegistry;
-import me.yleoft.zAPI.listeners.DupeFixerListeners;
-import me.yleoft.zAPI.listeners.ItemListeners;
-import me.yleoft.zAPI.listeners.PlayerListeners;
-import me.yleoft.zAPI.logging.FileLogger;
-import me.yleoft.zAPI.logging.Logger;
-import me.yleoft.zAPI.utility.PluginYAML;
-import me.yleoft.zAPI.utility.Version;
+import me.yleoft.zAPI.placeholders.PlaceholderDefinition;
+import me.yleoft.zAPI.placeholders.PlaceholdersHandler;
+import me.yleoft.zAPI.hook.HookRegistry;
+import me.yleoft.zAPI.internal.DupeFixerListeners;
+import me.yleoft.zAPI.internal.ItemListeners;
+import me.yleoft.zAPI.internal.PlayerListeners;
+import me.yleoft.zAPI.log.FileLogger;
+import me.yleoft.zAPI.log.Logger;
+import me.yleoft.zAPI.util.PluginYAML;
+import me.yleoft.zAPI.util.Version;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bstats.bukkit.Metrics;
 import org.bstats.charts.DrilldownPie;
@@ -60,22 +60,7 @@ public abstract class zAPI {
     private static FoliaLib foliaLib;
     private static Logger logger;
     private static Logger pluginLogger;
-    private static PlaceholdersHandler placeholdersHandler = new PlaceholdersHandler() {
-        @Override
-        public @NotNull String getIdentifier() {
-            return "";
-        }
-
-        @Override
-        public @NotNull List<PlaceholderDefinition> getPlaceholders() {
-            return List.of();
-        }
-
-        @Override
-        public @Nullable String onPlaceholderRequest(@Nullable OfflinePlayer player, @NotNull String key, @NotNull List<String> parameters) {
-            return "";
-        }
-    };
+    private static PlaceholdersHandler placeholdersHandler = new NoOpPlaceholdersHandler();
     private static final MiniMessage miniMessage = MiniMessage.miniMessage();
     public static boolean useNBTAPI = false;
 
@@ -254,6 +239,15 @@ public abstract class zAPI {
     @NotNull
     public static Metrics startMetrics(int pluginId) {
         return new Metrics(plugin, pluginId);
+    }
+
+    private static final class NoOpPlaceholdersHandler implements PlaceholdersHandler {
+        @Override public @NotNull String getIdentifier() { return ""; }
+        @Override public @NotNull List<PlaceholderDefinition> getPlaceholders() { return List.of(); }
+        @Override public @Nullable String onPlaceholderRequest(
+                @Nullable OfflinePlayer player, @NotNull String key, @NotNull List<String> parameters) {
+            return "";
+        }
     }
 
 }

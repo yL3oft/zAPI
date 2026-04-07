@@ -2,8 +2,8 @@ package me.yleoft.zAPI.inventory;
 
 import me.yleoft.zAPI.command.Command;
 import me.yleoft.zAPI.item.ItemBuilder;
-import me.yleoft.zAPI.utility.PluginYAML;
-import me.yleoft.zAPI.utility.TextFormatter;
+import me.yleoft.zAPI.util.PluginYAML;
+import me.yleoft.zAPI.util.TextFormatter;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;

@@ -17,5 +17,9 @@ public final class zAPI {
         public void warn(String message) {
             // swallow in tests (or store messages if you want to assert them)
         }
+
+        public void warn(String message, Throwable throwable) {
+            // swallow in tests (or store messages if you want to assert them)
+        }
     }
 }

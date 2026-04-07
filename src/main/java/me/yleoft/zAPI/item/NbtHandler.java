@@ -1,9 +1,7 @@
 package me.yleoft.zAPI.item;
 
 import de.tr7zw.changeme.nbtapi.NBT;
-import me.yleoft.zAPI.utility.Version;
-import me.yleoft.zAPI.zAPI;
-import net.kyori.adventure.text.Component;
+import me.yleoft.zAPI.util.Version;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;

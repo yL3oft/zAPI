@@ -1,8 +1,8 @@
 package me.yleoft.zAPI.item;
 
-import me.yleoft.zAPI.skull.HeadProvider;
-import me.yleoft.zAPI.utility.MathExpressionEvaluator;
-import me.yleoft.zAPI.utility.TextFormatter;
+import me.yleoft.zAPI.item.head.HeadProvider;
+import me.yleoft.zAPI.util.MathExpressionEvaluator;
+import me.yleoft.zAPI.util.TextFormatter;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextReplacementConfig;
 import net.kyori.adventure.text.format.TextDecoration;

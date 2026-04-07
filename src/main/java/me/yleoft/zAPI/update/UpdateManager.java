@@ -3,7 +3,7 @@ package me.yleoft.zAPI.update;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import me.yleoft.zAPI.utility.Version;
+import me.yleoft.zAPI.util.Version;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;

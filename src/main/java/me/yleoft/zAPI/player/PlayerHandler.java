@@ -1,7 +1,7 @@
 package me.yleoft.zAPI.player;
 
 import me.yleoft.zAPI.item.NbtHandler;
-import me.yleoft.zAPI.utility.Version;
+import me.yleoft.zAPI.util.Version;
 import me.yleoft.zAPI.zAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
